@@ -1,0 +1,1593 @@
+/* ==========================================================================
+   Tokens — Minerva University branding (references/MUBRANDING.md)
+   ========================================================================== */
+
+:root {
+  /* Brand palette */
+  --mu-black: #000000;
+  --mu-orange: #f0961e;
+  --mu-gold: #efb81e;
+  --mu-cream: #faf6f0;
+  --mu-off-white: #f9f9f9;
+  --mu-white: #ffffff;
+  --mu-light-grey: #bfbfbf;
+  --mu-grey: #595959;
+  --mu-near-black: #222222;
+  --mu-brown-black: #3c3732;
+
+  /* Rubric scores */
+  --rubric-0: #676767;
+  --rubric-1: #df2f26;
+  --rubric-2: #f0871e;
+  --rubric-3: #33ab6f;
+  --rubric-4: #0a78bf;
+  --rubric-5: #5b3e97;
+
+  /* Pastel rubric colours, for scores inside the grade diagrams */
+  --pastel-0: color-mix(in srgb, var(--rubric-0) 32%, white);
+  --pastel-1: color-mix(in srgb, var(--rubric-1) 32%, white);
+  --pastel-2: color-mix(in srgb, var(--rubric-2) 32%, white);
+  --pastel-3: color-mix(in srgb, var(--rubric-3) 32%, white);
+  --pastel-4: color-mix(in srgb, var(--rubric-4) 32%, white);
+  --pastel-5: color-mix(in srgb, var(--rubric-5) 32%, white);
+
+  /* Roles */
+  --color-bg: var(--mu-cream);
+  --color-ink: var(--mu-near-black);
+  --color-muted: var(--mu-grey);
+  --color-panel: var(--mu-brown-black);
+  --color-on-panel: var(--mu-cream);
+  --color-accent: var(--mu-gold);
+  --color-box: #e6e1d9;
+  --color-future: #ece6dc;
+
+  /* Type: brand fonts first (if installed/licensed), then close fallbacks */
+  --font-display: "Chronicle Display", "Chronicle Text G1", Georgia, "Times New Roman", serif;
+  --font-deck: "Chronicle Deck", "Chronicle Text G1", Georgia, serif;
+  --font-body: "Neue Haas Grotesk Text Pro", "Neue Haas Grotesk Display Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --size-body: 1.125rem;                       /* 18px */
+  --size-h1: clamp(2.8rem, 6vw, 4.5rem);       /* ≥ 2.5× body */
+  --size-h2: 1.6rem;                           /* 1–1.5× body (upper bound) */
+  --size-h3: 1.15rem;
+
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --measure: 42rem;
+  --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--size-body);
+  line-height: 1.6;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--size-h1);
+  line-height: 1.05;
+  margin: 0;
+}
+
+h2 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--size-h2);
+  line-height: 1.25;
+  margin: 0 0 1rem;
+}
+
+h2::after {
+  content: "";
+  display: block;
+  width: 4rem;
+  height: 4px;
+  margin-top: 0.6rem;
+  background: var(--color-accent);
+}
+
+h3 {
+  font-family: var(--font-deck);
+  font-weight: 400;
+  font-size: var(--size-h3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.5rem;
+}
+
+/* Marks text still to be written. */
+.placeholder {
+  border: 1px dashed currentColor;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  color: color-mix(in srgb, currentColor 55%, transparent);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+button {
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.button-quiet {
+  border: 1px solid var(--mu-light-grey);
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  background: var(--mu-white);
+  transition: transform 150ms var(--bounce), background 150ms;
+}
+
+.button-quiet:hover {
+  background: var(--color-box);
+}
+
+.button-quiet[aria-pressed="true"] {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--mu-white);
+}
+
+.button-quiet--reset:hover {
+  transform: rotate(-30deg);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+/* ==========================================================================
+   Site header
+   ========================================================================== */
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
+  padding: 1rem var(--gutter);
+  background: var(--mu-near-black);
+  color: var(--color-on-panel);
+  border-bottom: 3px solid var(--color-accent);
+}
+
+.site-header a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav__item {
+  position: relative;
+}
+
+.site-nav a {
+  font-size: 0.95rem;
+}
+
+/* Sub-pages drop down on hover, or when a link inside has keyboard focus. */
+.site-nav__menu {
+  position: absolute;
+  top: 100%;
+  left: -1rem;
+  z-index: 40;
+  min-width: 15rem;
+  margin: 0;
+  padding: 1rem 0 0.5rem;
+  list-style: none;
+  background: var(--mu-near-black);
+  border-bottom: 3px solid var(--color-accent);
+  opacity: 0;
+  visibility: hidden;
+  translate: 0 -0.25rem;
+  transition: opacity 150ms, translate 150ms, visibility 150ms;
+}
+
+.site-nav__item:hover .site-nav__menu,
+.site-nav__item:focus-within .site-nav__menu {
+  opacity: 1;
+  visibility: visible;
+  translate: 0 0;
+}
+
+.site-nav__menu a {
+  display: block;
+  padding: 0.4rem 1rem;
+}
+
+.site-header a:hover,
+.site-header a[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.3em;
+}
+
+/* ==========================================================================
+   Hero (title page)
+   ========================================================================== */
+
+.hero {
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4rem;
+  padding: var(--gutter);
+  text-align: center;
+  background: var(--color-panel);
+  color: var(--color-on-panel);
+}
+
+.hero--short {
+  min-height: 40vh;
+}
+
+.hero__inner {
+  max-width: 48rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero__cue {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--color-accent);
+  animation: nudge 1.8s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  50% { transform: translateY(0.5rem); }
+}
+
+/* ==========================================================================
+   Prose sections (second page)
+   ========================================================================== */
+
+.prose {
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: 5rem var(--gutter);
+}
+
+/* ==========================================================================
+   Example course: timeline and weight bars
+   ========================================================================== */
+
+.example,
+.choose {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 5rem var(--gutter) 3rem;
+}
+
+.example__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.example__timeline {
+  margin: 1.5rem 0 1rem;
+}
+
+.timeline {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--font-body);
+}
+
+.tl-future {
+  fill: var(--color-future);
+}
+
+.tl-axis {
+  stroke: var(--color-ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.tl-stem {
+  stroke: var(--color-ink);
+  stroke-width: 2;
+}
+
+.session.is-future {
+  cursor: not-allowed;
+}
+
+.session.is-future .tl-stem,
+.session.is-future .tl-dot {
+  stroke: var(--mu-light-grey);
+  fill: var(--mu-light-grey);
+}
+
+.session.is-future .tl-card {
+  fill: none;
+  stroke: var(--mu-light-grey);
+  stroke-dasharray: 4 3;
+}
+
+.session.is-future text {
+  fill: var(--mu-light-grey);
+}
+
+.session.is-shaking {
+  animation: shake 400ms ease;
+}
+
+@keyframes shake {
+  25% { translate: -4px 0; }
+  50% { translate: 4px 0; }
+  75% { translate: -2px 0; }
+}
+
+.tl-card {
+  fill: var(--mu-white);
+  stroke: var(--mu-light-grey);
+  stroke-width: 1.5;
+}
+
+.timeline text {
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.tl-name {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--color-muted);
+}
+
+.tl-lo {
+  font-size: 12px;
+  fill: var(--color-muted);
+}
+
+.tl-lo--small {
+  font-size: 9px;
+}
+
+/* Scores and add slots are SVG buttons; the inner group scales so the outer keeps its position. */
+.tl-token,
+.tl-slot {
+  cursor: pointer;
+  outline: none;
+}
+
+.tl-token__inner,
+.tl-slot__inner {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 180ms var(--bounce);
+}
+
+.tl-token:hover .tl-token__inner,
+.tl-slot:hover .tl-slot__inner {
+  transform: scale(1.18);
+}
+
+.tl-token circle {
+  stroke: var(--mu-white);
+  stroke-width: 2;
+}
+
+.tl-token text {
+  fill: var(--mu-white);
+  font-size: 14px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.tl-token:focus-visible circle,
+.tl-slot:focus-visible circle {
+  stroke: var(--color-accent);
+  stroke-width: 4;
+}
+
+.tl-token__inner.is-new {
+  animation: pop 500ms var(--bounce);
+}
+
+@keyframes pop {
+  from { transform: scale(0); }
+}
+
+.tl-slot circle {
+  fill: var(--mu-white);
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.tl-slot text {
+  font-size: 18px;
+  fill: var(--color-ink);
+  pointer-events: none;
+}
+
+.session.is-next .tl-slot__pulse {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-dasharray: none;
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse 1.8s ease-out infinite;
+}
+
+.tl-slot__pulse {
+  opacity: 0;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+
+/* Model-specific pieces: shown only for the chosen model(s) */
+
+.page[data-mode="at"] .co-only,
+.page[data-mode="co"] .at-only {
+  display: none !important;
+}
+
+.example__body {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr) 8.5rem;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.page[data-mode="at"] .example__body {
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+}
+
+.page[data-mode="co"] .example__body {
+  grid-template-columns: minmax(0, 1fr) 8.5rem;
+}
+
+.example__timeline {
+  margin: 0;
+  align-self: center;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 22rem;
+}
+
+.side__title {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+/* Weight bars: vertical, one per model */
+
+.weights__bar {
+  position: relative;
+  flex: 1;
+  min-height: 14rem;
+  border-radius: 10px;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.weights__segment {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  text-align: center;
+  transition: top 250ms var(--bounce), height 250ms var(--bounce);
+}
+
+.weights__bar.is-dragging .weights__segment {
+  transition: none;
+}
+
+.weights__segment--0 {
+  background: var(--mu-light-grey);
+  color: var(--color-ink);
+}
+
+.weights__segment--1 {
+  background: var(--mu-grey);
+  color: var(--mu-white);
+}
+
+.weights__segment.is-empty {
+  background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgb(255 255 255 / 0.35) 6px 9px);
+}
+
+.weights__percent {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.weights__segment.is-narrow .weights__name {
+  display: none;
+}
+
+.weights__handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.4rem;
+  margin-top: -0.7rem;
+  cursor: ns-resize;
+  z-index: 1;
+}
+
+.weights__handle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 15%;
+  right: 15%;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: var(--mu-white);
+  box-shadow: 0 0 0 2px var(--color-ink);
+  transition: transform 150ms var(--bounce);
+}
+
+.weights__handle:hover::before,
+.weights__handle:focus-visible::before,
+.weights__bar.is-dragging .weights__handle:active::before {
+  transform: scaleY(1.6);
+  background: var(--color-accent);
+}
+
+.weights__handle:focus-visible {
+  outline: none;
+}
+
+/* CO multipliers */
+
+.multipliers {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.multiplier {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  background: var(--color-accent);
+  font-size: 0.8rem;
+  transition: transform 150ms var(--bounce), background 150ms;
+}
+
+.multiplier:hover {
+  background: var(--mu-orange);
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   Popover (editing a score in place)
+   ========================================================================== */
+
+.popover {
+  position: absolute;
+  z-index: 20;
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 16px));
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: var(--mu-white);
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.18);
+  font-size: 0.85rem;
+  animation: popover-in 200ms var(--bounce);
+}
+
+@keyframes popover-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+}
+
+.popover__title {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.popover__note {
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+.popover__scores {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.popover__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+
+.popover__co {
+  width: 100%;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
+
+.swatch {
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  color: var(--mu-white);
+  font-weight: 700;
+  transition: transform 150ms var(--bounce);
+}
+
+.swatch:hover {
+  transform: scale(1.12);
+}
+
+.swatch[aria-pressed="true"] {
+  border-color: var(--color-ink);
+  transform: scale(1.12);
+}
+
+.swatch--0 { background: var(--rubric-0); }
+.swatch--1 { background: var(--rubric-1); }
+.swatch--2 { background: var(--rubric-2); }
+.swatch--3 { background: var(--rubric-3); }
+.swatch--4 { background: var(--rubric-4); }
+.swatch--5 { background: var(--rubric-5); }
+
+.chip {
+  border: 1px solid var(--mu-light-grey);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  background: var(--mu-white);
+  font-size: 0.85rem;
+}
+
+.chip:hover {
+  background: var(--color-box);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--mu-white);
+}
+
+.chip--round {
+  min-width: 2.6rem;
+}
+
+.popover__remove {
+  margin-top: 0.75rem;
+  width: 100%;
+  border: 1px solid var(--rubric-1);
+  border-radius: 8px;
+  padding: 0.3rem;
+  background: none;
+  color: var(--rubric-1);
+}
+
+.popover__remove:hover {
+  background: var(--rubric-1);
+  color: var(--mu-white);
+}
+
+/* ==========================================================================
+   Model choice
+   ========================================================================== */
+
+.choose__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.choice {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--mu-white);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.06);
+  transition: transform 200ms var(--bounce), box-shadow 200ms, border-color 200ms;
+}
+
+.choice:hover {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.12);
+}
+
+.choice[aria-pressed="true"] {
+  border-color: var(--color-accent);
+}
+
+.choice__art {
+  width: 7rem;
+  height: auto;
+}
+
+.choice__name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.art-a { fill: var(--mu-light-grey); }
+.art-b { fill: var(--mu-grey); }
+.art-bin { fill: none; stroke: var(--color-ink); stroke-width: 2; stroke-linejoin: round; }
+.art-cube { fill: var(--mu-white); stroke: var(--color-ink); stroke-width: 1; }
+
+/* ==========================================================================
+   Scrollytelling demo (steps scroll on the left, the figure sticks on the right)
+   ========================================================================== */
+
+.scrolly {
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr) 17rem;
+  grid-template-areas: "at figure co";
+}
+
+.page[data-mode="at"] .scrolly {
+  grid-template-columns: 20rem minmax(0, 1fr);
+  grid-template-areas: "at figure";
+}
+
+.page[data-mode="co"] .scrolly {
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  grid-template-areas: "figure co";
+}
+
+.scrolly__steps {
+  background: var(--color-panel);
+  color: var(--color-on-panel);
+  padding: 40vh var(--gutter) 60vh;
+}
+
+.demo {
+  margin-top: 8rem;
+}
+
+.scrolly__steps--at { grid-area: at; }
+.scrolly__steps--co { grid-area: co; }
+
+.step {
+  min-height: 90vh;
+  opacity: 0.3;
+  transition: opacity 300ms ease;
+}
+
+.step.is-active {
+  opacity: 1;
+}
+
+/* With only the AT model there is no copying step, so its placeholder goes too. */
+.page[data-mode="at"] .step--spacer,
+.page[data-mode="at"] .scrolly__steps--co .step[data-stage="replicate"] {
+  display: none;
+}
+
+.scrolly__figure {
+  grid-area: figure;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  margin: 0;
+  padding: 3.5rem 1.5rem 1rem;
+  display: flex;
+}
+
+.mode-switch {
+  position: absolute;
+  top: 0.9rem;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 1;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--color-box);
+}
+
+.mode-switch button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.25rem 0.9rem;
+  background: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: background 200ms, color 200ms;
+}
+
+.mode-switch button[aria-pressed="true"] {
+  background: var(--color-ink);
+  color: var(--mu-white);
+}
+
+.panels {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.panel {
+  min-width: 0;
+  min-height: 0;
+  animation: panel-in 400ms var(--bounce);
+}
+
+@keyframes panel-in {
+  from { opacity: 0; transform: scale(0.97); }
+}
+
+.panel svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  font-family: var(--font-body);
+}
+
+/* Small screens: figure sticks to the top, steps scroll up beneath it as cards. */
+@media (max-width: 50rem) {
+  .example__body,
+  .page[data-mode] .example__body {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .example__timeline {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .page[data-mode="at"] .side--at,
+  .page[data-mode="co"] .side--co {
+    grid-column: 1 / -1;
+  }
+
+  .side {
+    min-height: 16rem;
+  }
+
+  .page[data-mode] .scrolly {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "figure figure" "at co";
+  }
+
+  .page[data-mode="at"] .scrolly { grid-template-areas: "figure figure" "at at"; }
+  .page[data-mode="co"] .scrolly { grid-template-areas: "figure figure" "co co"; }
+
+  .scrolly__figure {
+    height: 70vh;
+    padding: 3rem 0.5rem 0.5rem;
+    background: var(--color-bg);
+    z-index: 1;
+  }
+
+  .panels {
+    gap: 0.25rem;
+  }
+
+  .scrolly__steps {
+    position: relative;
+    z-index: 2;
+    background: none;
+    color: var(--color-ink);
+    padding: 10vh 0.5rem 50vh;
+  }
+
+  .step {
+    min-height: 60vh;
+  }
+
+  /* Only the active card shows, so earlier cards don't cover the figure as they scroll past. */
+  .step:not(.is-active) {
+    opacity: 0;
+  }
+
+  .step > * {
+    background: var(--color-panel);
+    color: var(--color-on-panel);
+    margin: 0;
+    padding: 1rem;
+  }
+
+  .step h3 {
+    border-radius: 8px 8px 0 0;
+  }
+
+  .step p {
+    border-radius: 0 0 8px 8px;
+  }
+}
+
+/* ==========================================================================
+   Demo chart (SVG elements drawn by js/chart.js)
+   ========================================================================== */
+
+.panel .text {
+  fill: var(--color-ink);
+  dominant-baseline: central;
+  transition: fill 600ms;
+}
+
+.title {
+  font-weight: 700;
+}
+
+.label--strong {
+  font-weight: 700;
+}
+
+.label--small {
+  fill: var(--color-muted);
+}
+
+.label--group {
+  font-family: var(--font-deck);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.panel .on-dark {
+  fill: var(--mu-white);
+}
+
+.average {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.axis {
+  stroke: var(--color-ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.stem {
+  stroke: var(--color-ink);
+  stroke-width: 2;
+}
+
+.link {
+  stroke: var(--color-ink);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* Faint path from a score's place on the timeline to its category; it draws itself as the score travels. */
+.trail {
+  stroke: var(--color-muted);
+  stroke-width: 1;
+  stroke-opacity: 0.35;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 2s ease forwards;
+}
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.ghost {
+  stroke: var(--mu-light-grey);
+}
+
+.area {
+  transition: fill 600ms;
+}
+
+.box { fill: var(--color-box); }
+.container { fill: none; stroke: var(--color-muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.area--0 { fill: var(--mu-light-grey); }
+.area--1 { fill: var(--mu-grey); }
+.area--whole { fill: var(--mu-brown-black); }
+.cell { fill: var(--mu-white); }
+.melt { shape-rendering: crispEdges; }
+
+.pastel--0, .pastel--0 rect { fill: var(--pastel-0); }
+.pastel--1, .pastel--1 rect { fill: var(--pastel-1); }
+.pastel--2, .pastel--2 rect { fill: var(--pastel-2); }
+.pastel--3, .pastel--3 rect { fill: var(--pastel-3); }
+.pastel--4, .pastel--4 rect { fill: var(--pastel-4); }
+.pastel--5, .pastel--5 rect { fill: var(--pastel-5); }
+
+.hatch__bg { fill: var(--color-box); }
+.hatch__line { stroke: var(--mu-light-grey); stroke-width: 3; }
+
+.bin {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* LO bins inside a CO bin */
+.sub-bin {
+  fill: var(--mu-white);
+  fill-opacity: 0.35;
+}
+
+.bin--lo {
+  stroke-width: 2;
+}
+
+/* Outline shared by a score and its copies, so together they read as one Tetris piece */
+.piece {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+  stroke-linecap: square;
+}
+
+/* Score tokens: coloured circles, then pastel cubes (CO) or numbers on pastel sections (AT). */
+.token rect {
+  stroke: var(--mu-white);
+  stroke-width: 1.5;
+  transition: fill 600ms, stroke 600ms;
+}
+
+.token text {
+  fill: var(--mu-white);
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  transition: fill 600ms;
+}
+
+.token--score-0 rect, .token--score-0 circle { fill: var(--rubric-0); }
+.token--score-1 rect, .token--score-1 circle { fill: var(--rubric-1); }
+.token--score-2 rect, .token--score-2 circle { fill: var(--rubric-2); }
+.token--score-3 rect, .token--score-3 circle { fill: var(--rubric-3); }
+.token--score-4 rect, .token--score-4 circle { fill: var(--rubric-4); }
+.token--score-5 rect, .token--score-5 circle { fill: var(--rubric-5); }
+
+.token--cube rect {
+  stroke: none;
+}
+
+.token--cube text,
+.token--bare text {
+  fill: var(--color-ink);
+}
+
+/* Squares of a score and its copies touch with no border, so they read as one block */
+.token--joined rect {
+  stroke: none;
+}
+
+.token--ghost {
+  opacity: 0.25;
+}
+
+.token--ghost rect {
+  fill: var(--mu-light-grey);
+}
+
+.token--bare rect {
+  fill: transparent;
+  stroke: transparent;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.footer {
+  background: var(--color-panel);
+  color: var(--color-on-panel);
+  padding: 3rem var(--gutter);
+}
+
+/* ==========================================================================
+   Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .trail {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ==========================================================================
+   Try it yourself
+   ========================================================================== */
+
+.sandbox {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 6rem var(--gutter) 4rem;
+}
+
+.sandbox__body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.sandbox .panels {
+  height: min(85vh, 56rem);
+}
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.palette .swatch {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.1rem;
+  cursor: grab;
+  touch-action: none;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
+}
+
+.sandbox.is-holding .panels {
+  cursor: copy;
+}
+
+.drag-ghost {
+  position: absolute;
+  z-index: 30;
+  width: 3rem;
+  height: 3rem;
+  margin: -1.5rem 0 0 -1.5rem;
+  pointer-events: none;
+  transform: scale(1.15) rotate(-6deg);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.25);
+}
+
+.drop-highlight {
+  position: absolute;
+  z-index: 25;
+  pointer-events: none;
+  border: 3px dashed var(--color-accent);
+  border-radius: 8px;
+  background: rgb(239 184 30 / 0.15);
+}
+
+.drop-highlight--remove {
+  border-color: var(--rubric-1);
+  background: rgb(223 47 38 / 0.1);
+  cursor: pointer;
+}
+
+.drop-anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+@media (max-width: 50rem) {
+  .sandbox__body {
+    grid-template-columns: 1fr;
+  }
+
+  .palette {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .sandbox .panels {
+    height: 70vh;
+  }
+}
+
+/* ==========================================================================
+   Understanding Grading Models: scrolling stories
+   A sticky figure beside (or above) steps that scroll past; the figure's
+   data-show says which extras it shows besides the chart.
+   ========================================================================== */
+
+.prose--lead {
+  padding-bottom: 2rem;
+}
+
+.prose > p:last-child {
+  margin-bottom: 0;
+}
+
+/* Links to an HC's page in the HC handbook. */
+.hc {
+  color: inherit;
+  font-weight: 700;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+
+.story {
+  display: grid;
+}
+
+.story__figure {
+  grid-area: figure;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  margin: 0;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 9rem;
+  grid-template-areas: "bar chart grade";
+  gap: 1rem;
+}
+
+.story__figure > * {
+  min-height: 0;
+}
+
+.story__figure .panel {
+  grid-area: chart;
+}
+
+/* Figure on the left: the figure spans the whole story so the opening photos can sit symmetrically,
+   and the steps scroll over its right-hand side. The steps' column turns dark after the first screen. */
+.story--figure-left {
+  grid-template-columns: minmax(0, 1fr) 24rem;
+}
+
+.story--figure-left .story__figure {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  grid-template-columns: auto minmax(0, 1fr) 9rem 24rem;
+  grid-template-areas: "bar chart grade .";
+}
+
+.story--figure-left .story__steps {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(transparent 100vh, var(--color-panel) 100vh);
+}
+
+.story--figure-left .step--spacer {
+  min-height: 0;
+  height: 100vh;
+}
+
+.story--figure-right {
+  grid-template-columns: 24rem minmax(0, 1fr);
+  grid-template-areas: "steps figure";
+}
+
+.story__weights {
+  grid-area: bar;
+  display: flex;
+  gap: 0.6rem;
+  padding: 10vh 0;
+}
+
+.story__bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 5rem;
+}
+
+.weights__segment + .weights__segment {
+  border-top: 1px solid rgb(255 255 255 / 0.7);
+}
+
+.story__photos {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  place-items: center;
+  pointer-events: none;
+}
+
+.story__photo,
+.story__placeholder {
+  grid-area: chart;
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+}
+
+.story__grade {
+  grid-area: grade;
+  align-self: center;
+  text-align: center;
+}
+
+.story__grade-value {
+  margin: 0.4rem 0 0;
+  padding: 0.6rem 0.4rem;
+  border-radius: 8px;
+  font-size: 2.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  transition: background 600ms;
+}
+
+/* Extras hidden until their scene comes up. */
+.story__weights,
+.story__photos .photo,
+.story__photo,
+.story__placeholder,
+.story__grade {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 400ms, visibility 400ms;
+}
+
+.story__figure[data-show~="bar"] .story__weights,
+.story__figure[data-show~="photo"] .photo--left,
+.story__figure[data-show~="photo-right"] .photo--right,
+.story__figure[data-show~="photo"] .story__photo,
+.story__figure[data-show~="placeholder"] .story__placeholder,
+.story__figure[data-show~="grade"] .story__grade {
+  opacity: 1;
+  visibility: visible;
+}
+
+.photo,
+.story__photo {
+  display: grid;
+  place-items: center;
+  width: min(100%, 32rem);
+  aspect-ratio: 4 / 3;
+  margin: 0;
+  text-align: center;
+}
+
+.story__placeholder {
+  font-size: 1.4rem;
+  padding: 2rem 3rem;
+}
+
+.story__steps {
+  grid-area: steps;
+  background: var(--color-panel);
+  color: var(--color-on-panel);
+  padding: 0 var(--gutter) 40vh;
+}
+
+.story .step {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* A list told one item per step: each step's list continues the numbering. */
+.reasons {
+  margin: 0;
+  padding-left: 1.6rem;
+}
+
+.reasons li::marker {
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.multiplier-badge {
+  font-weight: 700;
+  fill: var(--color-ink);
+}
+
+.step__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.skip {
+  color: inherit;
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.skip:hover {
+  opacity: 1;
+}
+
+/* The pool of scores: thin circles around groups, scores drifting gently. */
+.ring {
+  fill: none;
+  stroke: var(--mu-black);
+  stroke-width: 1;
+}
+
+.is-floating .token > * {
+  animation: float 5s ease-in-out infinite alternate;
+}
+
+.is-floating .token:nth-child(3n + 1) > * {
+  animation-duration: 6.5s;
+  animation-delay: -2s;
+}
+
+.is-floating .token:nth-child(4n + 2) > * {
+  animation-duration: 4.2s;
+  animation-delay: -3.5s;
+}
+
+@keyframes float {
+  from { translate: -2px -4px; }
+  to { translate: 3px 4px; }
+}
+
+/* Stacked: the figure fills the top of the screen and the text appears beneath it, then slides under it. */
+.story--stacked {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "figure" "steps";
+}
+
+.story--stacked .story__figure {
+  height: 55vh;
+  z-index: 1;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "chart";
+  max-width: 72rem;
+  width: 100%;
+  justify-self: center;
+  background: var(--color-bg);
+}
+
+.story--stacked .story__steps {
+  background: none;
+  color: var(--color-ink);
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  justify-self: center;
+  padding-bottom: 20vh;
+}
+
+.story--stacked .step {
+  min-height: 45vh;
+}
+
+/* Small screens: every story stacks, with the active step as a card under the figure. */
+@media (max-width: 50rem) {
+  .story--figure-left,
+  .story--figure-right {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "figure" "steps";
+  }
+
+  .story__figure,
+  .story--figure-left .story__figure {
+    grid-column: auto;
+    grid-row: auto;
+    height: 70vh;
+    padding: 0.5rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "bar chart";
+    background: var(--color-bg);
+    z-index: 1;
+  }
+
+  .story__bar {
+    width: 3.5rem;
+  }
+
+  .story__grade {
+    grid-area: chart;
+    align-self: start;
+    justify-self: end;
+  }
+
+  .story--figure-left .story__steps,
+  .story--figure-right .story__steps {
+    grid-column: auto;
+    grid-row: 2;
+  }
+
+  .story:not(.story--stacked) .story__steps {
+    position: relative;
+    z-index: 2;
+    background: none;
+    padding: 0 0.5rem 50vh;
+  }
+
+  .story:not(.story--stacked) .step {
+    min-height: 60vh;
+    justify-content: flex-end;
+  }
+
+  .story:not(.story--stacked) .step:not(.is-active) {
+    opacity: 0;
+  }
+
+  .story:not(.story--stacked) .step > * {
+    background: var(--color-panel);
+    color: var(--color-on-panel);
+    margin: 0;
+    padding: 1rem;
+  }
+}

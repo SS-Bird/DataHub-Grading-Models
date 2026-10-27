@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculations for each Grading Model</title>
+  <meta name="description" content="A scrolling, animated explainer of the Assessment Type Model and the CO Model used to calculate course grades.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+
+  <header class="site-header">
+    <nav aria-label="Site">
+      <ul class="site-nav">
+        <li class="site-nav__item">
+          <a href="understanding-course-models.html">Understanding Grading Models <span aria-hidden="true">▾</span></a>
+          <ul class="site-nav__menu">
+            <li><a href="understanding-course-models.html#what-are-grading-models">What are Grading Models?</a></li>
+            <li><a href="understanding-course-models.html#assessment-type-model">Assessment Type Model</a></li>
+            <li><a href="understanding-course-models.html#co-based-model">CO Based Model</a></li>
+          </ul>
+        </li>
+        <li class="site-nav__item">
+          <a href="index.html" aria-current="page">Calculations for each Grading Model <span aria-hidden="true">▾</span></a>
+          <ul class="site-nav__menu">
+            <li><a href="index.html#assessment-type-model">Assessment Type Model</a></li>
+            <li><a href="index.html#co-based-model">CO Based Model</a></li>
+            <li><a href="index.html#side-by-side">Side by Side</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="page" data-mode="split">
+
+    <section class="hero hero--short" aria-labelledby="page-title">
+      <h1 id="page-title">Calculations for each Grading Model</h1>
+    </section>
+
+    <!-- Choose which model(s) to follow; everything below adapts to the choice -->
+    <section class="choose" aria-label="Choose a model">
+      <div class="choose__options">
+        <button type="button" class="choice" data-mode-choice="at" data-scroll aria-pressed="false">
+          <svg class="choice__art" viewBox="0 0 60 40" aria-hidden="true">
+            <rect x="4" y="4" width="18" height="32" class="art-a"/><rect x="24" y="4" width="32" height="12" class="art-b"/>
+            <rect x="24" y="18" width="32" height="18" class="art-b"/>
+          </svg>
+          <span class="choice__name">Assessment Type Model</span>
+        </button>
+        <button type="button" class="choice" data-mode-choice="split" data-scroll aria-pressed="false">
+          <svg class="choice__art" viewBox="0 0 60 40" aria-hidden="true">
+            <rect x="4" y="4" width="8" height="32" class="art-a"/><rect x="13" y="4" width="14" height="32" class="art-b"/>
+            <path d="M33 10V36H44V10M46 18V36H56V18" class="art-bin"/>
+          </svg>
+          <span class="choice__name">Both, Side by Side</span>
+        </button>
+        <button type="button" class="choice" data-mode-choice="co" data-scroll aria-pressed="false">
+          <svg class="choice__art" viewBox="0 0 60 40" aria-hidden="true">
+            <path d="M6 8V36H32V8M36 18V36H54V18" class="art-bin"/>
+            <rect x="9" y="28" width="6" height="6" class="art-cube"/><rect x="16" y="28" width="6" height="6" class="art-cube"/>
+            <rect x="23" y="28" width="6" height="6" class="art-cube"/><rect x="9" y="21" width="6" height="6" class="art-cube"/>
+            <rect x="39" y="28" width="6" height="6" class="art-cube"/><rect x="46" y="28" width="6" height="6" class="art-cube"/>
+          </svg>
+          <span class="choice__name">CO Model</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- The example course: edited directly on the timeline, weight bars and multipliers -->
+    <section class="example" aria-labelledby="example-heading">
+      <div class="example__head">
+        <h2 id="example-heading">An Example Course</h2>
+        <div class="presets" role="group" aria-label="Start from">
+          <button type="button" class="button-quiet" data-preset="part-way" aria-pressed="false">Part-way</button>
+          <button type="button" class="button-quiet" data-preset="finished" aria-pressed="false">Finished</button>
+          <button type="button" class="button-quiet" data-preset="big-difference" aria-pressed="false">Big difference</button>
+          <button type="button" class="button-quiet button-quiet--reset" data-action="reset" aria-label="Reset to the selected starting point">↺</button>
+        </div>
+      </div>
+      <p class="placeholder">[Explanation]</p>
+
+      <div class="example__body">
+        <div class="side side--at at-only">
+          <h3 class="side__title">Assessment Type Weights</h3>
+          <div class="weights__bar" data-list="assessmentTypes" role="group" aria-label="Assessment Type Model weights"></div>
+        </div>
+
+        <figure class="example__timeline">
+          <svg class="timeline" role="group" aria-label="Semester timeline: classes above the line, assignments below. Grey sessions are still to come."></svg>
+        </figure>
+
+        <div class="side side--co co-only">
+          <h3 class="side__title">CO Weights</h3>
+          <div class="weights__bar" data-list="outcomes" role="group" aria-label="CO Model weights"></div>
+          <h3 class="side__title">Weights</h3>
+          <ul class="multipliers" aria-label="How many times each assessment type's scores count in the CO model"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- The demonstration: each model's explanation sidebar beside the animated figure -->
+    <section class="scrolly demo" aria-label="How the example becomes a grade">
+      <div class="scrolly__steps scrolly__steps--at at-only">
+        <article class="step" data-stage="example">
+          <h3>The Example</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <!-- Keeps this sidebar level with the CO sidebar, which has an extra step here -->
+        <div class="step step--spacer" data-stage="replicate" aria-hidden="true"></div>
+        <article class="step" data-stage="sort">
+          <h3>Sorted by Assessment Type</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="group">
+          <h3>In-Class and Assignments</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="frame">
+          <h3>The Grade as an Area</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="subdivide">
+          <h3>Assignments Subdivided</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="fill">
+          <h3>Filled With Scores</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="melt1">
+          <h3>Category Averages</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="melt2">
+          <h3>Weighted Assignment Average</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="final">
+          <h3>The Grade</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+      </div>
+
+      <figure class="scrolly__figure">
+        <div class="mode-switch" role="group" aria-label="Show model">
+          <button type="button" data-mode-choice="at" aria-pressed="false">AT</button>
+          <button type="button" data-mode-choice="split" aria-pressed="false">Both</button>
+          <button type="button" data-mode-choice="co" aria-pressed="false">CO</button>
+        </div>
+        <div class="panels">
+          <div class="panel at-only" data-model="at">
+            <svg role="img" aria-label="Animated example of the Assessment Type Model"></svg>
+          </div>
+          <div class="panel co-only" data-model="co">
+            <svg role="img" aria-label="Animated example of the CO Model"></svg>
+          </div>
+        </div>
+      </figure>
+
+      <div class="scrolly__steps scrolly__steps--co co-only">
+        <article class="step" data-stage="example">
+          <h3>The Example</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="replicate">
+          <h3>Scores Are Copied</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="sort">
+          <h3>Sorted by Learning Outcome</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="group">
+          <h3>LOs Form Course Outcomes</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="frame">
+          <h3>The Grade as Bins</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="subdivide">
+          <h3>Learning Outcome Regions</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="fill">
+          <h3>Filled With Cubes</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="melt1">
+          <h3>CO Averages</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="melt2">
+          <h3>Same Height, Different Widths</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+        <article class="step" data-stage="final">
+          <h3>The Grade</h3>
+          <p class="placeholder">[Explanation]</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Try it yourself: the filled diagrams under their grade; scores can be dragged in. Uses its own copy of the course. -->
+    <section class="sandbox" aria-labelledby="sandbox-heading">
+      <div class="example__head">
+        <h2 id="sandbox-heading">Try It Yourself</h2>
+        <button type="button" class="button-quiet" data-action="sandbox-reset">↺ Back to the example</button>
+      </div>
+      <p class="placeholder">[Explanation]</p>
+
+      <div class="sandbox__body">
+        <div class="palette" role="group" aria-label="Scores to add"></div>
+        <div class="panels">
+          <div class="panel at-only" data-model="at">
+            <svg role="img" aria-label="The Assessment Type Model filled with the example's scores, under its grade"></svg>
+          </div>
+          <div class="panel co-only" data-model="co">
+            <svg role="img" aria-label="The CO Model filled with the example's scores, under its grade"></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p class="placeholder">[Footer]</p>
+  </footer>
+
+</body>
+</html>

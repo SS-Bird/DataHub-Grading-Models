@@ -1,0 +1,4 @@
+# Working files that the deployed site does not need
+references/
+CLAUDE.md
+README.md
