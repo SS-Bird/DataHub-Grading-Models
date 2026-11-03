@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Course Models Used by College</title>
+  <meta name="description" content="How many courses each college has graded with the Assessment Type Model and the CO Based Model, semester by semester.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/colleges.js"></script>
+</head>
+<body>
+
+  <header class="site-header">
+    <nav aria-label="Site">
+      <ul class="site-nav">
+        <li class="site-nav__item">
+          <a href="index.html">Understanding Grading Models <span aria-hidden="true">▾</span></a>
+          <ul class="site-nav__menu">
+            <li><a href="index.html#what-are-grading-models">What are Grading Models?</a></li>
+            <li><a href="index.html#assessment-type-model">Assessment Type Model</a></li>
+            <li><a href="index.html#co-based-model">CO Based Model</a></li>
+          </ul>
+        </li>
+        <li class="site-nav__item">
+          <a href="calculations.html">Calculations for each Grading Model <span aria-hidden="true">▾</span></a>
+          <ul class="site-nav__menu">
+            <li><a href="calculations.html#assessment-type-model">Assessment Type Model</a></li>
+            <li><a href="calculations.html#co-based-model">CO Based Model</a></li>
+            <li><a href="calculations.html#side-by-side">Side by Side</a></li>
+          </ul>
+        </li>
+        <li class="site-nav__item">
+          <a href="try-it-yourself.html">Try It Yourself</a>
+        </li>
+        <li class="site-nav__item">
+          <a href="course-models-by-college.html" aria-current="page">Course Models Used by College</a>
+        </li>
+        <li class="site-nav__item">
+          <span class="site-nav__label" tabindex="0">Old versions <span aria-hidden="true">▾</span></span>
+          <ul class="site-nav__menu">
+            <li><a href="understanding-original.html">Understanding Grading Models</a></li>
+            <li><a href="calculations-original.html">Calculations for each Grading Model</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <a class="site-logo" href="index.html"><img src="images/logo.png" alt="Data Hub"></a>
+  </header>
+
+  <main>
+    <section class="hero hero--short" aria-labelledby="page-title">
+      <h1 id="page-title">Course Models Used by College</h1>
+    </section>
+
+    <section class="colleges" aria-labelledby="colleges-heading">
+      <h2 id="colleges-heading">Courses graded with each model, by college</h2>
+
+      <!-- Assessment Type courses stack up above the line, CO courses down below it; drawn by js/colleges.js -->
+      <figure class="college-chart">
+        <svg role="img" aria-label="Stream graph of the number of courses graded with each model in each college, Fall 2023 to Spring 2026. The same numbers are in the table below."></svg>
+        <div class="college-chart__tooltip" hidden></div>
+        <figcaption>
+          <ul class="college-legend" aria-label="Colleges, with their shade in the Assessment Type and CO Based bands"></ul>
+          <p class="college-chart__credit placeholder">[Credit: chart and data by …]</p>
+        </figcaption>
+      </figure>
+
+      <details class="college-data">
+        <summary>The numbers as a table</summary>
+        <table class="college-table"></table>
+      </details>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>This is a DataHub project, created by Sophie Bird M27 and directed by Dean Ribeiro and Gisele Fretta Barros M26.</p>
+  </footer>
+
+</body>
+</html>

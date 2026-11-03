@@ -1,41 +1,46 @@
 // Entry point for the Understanding Grading Models page: three scrolling stories, each a sticky figure
 // whose scene follows the step being read. A scene names what the figure shows besides the chart
-// (`show`: photo, bar or placeholder), whether its scores float, and the chart frame(s) to draw.
-// Several frames play one after another, each held for its `hold`; `reset` puts the example back to its default
-// weights first; `grade` gives the course grade to show beside the diagram.
+// (`show`: photo, bar, grade, placeholder, or pair to show `pair`'s frame in a second panel beside the chart),
+// whether its scores float, and the chart frame(s) to draw.
+// Several frames play one after another, each held for its `hold`; scrolling back up plays them in reverse.
+// `reset` puts the example back to its default weights first; `grade` gives the course grade to show beside the diagram.
 
 import { createStore } from "./store.js";
 import { createChart } from "./chart.js";
 import { createWeightBar } from "./weights.js";
-import { VIEW, assessmentTypeFrame, coFrame, assessmentTypeStaircase } from "./scenes.js";
-import { scatterFrame, groupFrame } from "./pool.js";
-import { assessmentTypeModel, coModel, format } from "./grading.js";
+import { VIEW, DIAGRAM_SPAN, assessmentTypeFrame, coFrame, assessmentTypeTrajectory } from "./scenes.js";
+import { scatterFrame, groupFrame, rowFrame } from "./pool.js";
+import { assessmentTypeModel, coModel, format, percent } from "./grading.js";
 import { pastelFill } from "./palette.js";
 import { explainerPresets, earlySemester, sparseOutcome } from "./data.js";
 
-const POOL_VIEW = { w: 1000, h: 460 };
+const POOL_VIEW = { w: 640, h: 600 }; // narrow, leaving the text beside it room
+// The sized-scores page draws both models as bins of bars sized by score.
+const sized = document.body.dataset.variant === "sized";
 const PAUSE = 1600; // between frames of a sequence, unless a frame sets its own `hold`
 const NOTHING = { rects: [], paths: [], lines: [], tokens: [], texts: [] };
 
 /** The diagram's own timing bounces scores into place; here they glide. */
 const calm = (frame) => ({ ...frame, ease: "smooth", duration: 1200, stagger: 10 });
 
+/** How high the diagram's categories sit, on average, so the row of circles can wait at that height. */
+function categoryHeight(frame) {
+  const cats = frame.rects.filter((r) => /^(?:bin|t)-/.test(r.key) && r.w > 0);
+  return cats.reduce((a, r) => a + r.y + r.h / 2, 0) / Math.max(1, cats.length);
+}
+
+/** The circles in a row, in the order the bins (or cells) will be, at the height the diagram's categories sit. */
+const inRow = (groups, diagram) => rowFrame(groups, VIEW, { span: DIAGRAM_SPAN, y: categoryHeight(diagram) }, { labels: true });
+
 /**
- * Ease a pool into a diagram: the pool shrinks into the top-left corner to make room, the diagram appears,
- * then the scores drop into it (with any sections they fill).
+ * Ease the row of circles into the diagram: its bins appear behind the circles,
+ * then the scores move out of the circles into their bins (with any sections they fill).
  */
-// `k` scales the pool and (`x`, `y`) places it; the AT diagram starts higher, so its pool tucks into the title row.
-function intoDiagram(pool, full, { k = 0.22, x = 8, y = 8 } = {}) {
-  const corner = {
-    ...NOTHING,
-    rects: pool.rects.map((r) => ({ ...r, x: x + r.x * k, y: y + r.y * k, w: r.w * k, h: r.h * k, rx: r.rx * k })),
-    tokens: pool.tokens.map((t) => ({ ...t, x: x + t.x * k, y: y + t.y * k, size: t.size * k })),
-  };
+function intoBins(row, full) {
   return [
-    { ...corner, ease: "smooth", duration: 700, stagger: 0, hold: 800 },
     {
-      ...full, rects: [...corner.rects, ...full.rects.filter((r) => !r.key.startsWith("sec-"))], tokens: corner.tokens,
-      ease: "smooth", duration: 700, stagger: 0, hold: 800,
+      ...full, rects: [...full.rects.filter((r) => !r.key.startsWith("sec-")), ...row.rects], tokens: row.tokens,
+      texts: [...full.texts, ...row.texts], outlines: [], ease: "smooth", duration: 700, stagger: 0, hold: 900,
     },
     { ...full, ease: "smooth", duration: 1200, stagger: 12 },
   ];
@@ -62,9 +67,36 @@ function withMultipliers(course, frame) {
   return { ...frame, texts: [...frame.texts, ...badges] };
 }
 
-const coDiagram = (c) => coFrame(c, "fill", { fixedBins: true });
+const coDiagram = (c) => coFrame(c, "fill", { fixedBins: true, sized, alone: true });
+const atDiagram = (c) => assessmentTypeFrame(c, "fill", { sized, alone: true });
 
 const early = (course) => ({ ...course, scores: earlySemester });
+
+/** Assessment types with no scores yet. */
+function unfinished(course) {
+  const typeOf = new Map(course.sessions.map((s) => [s.id, s.type]));
+  return course.assessmentTypes.filter((t) => !course.scores.some((s) => typeOf.get(s.session) === t.id));
+}
+
+/** The course without the assessment types still to come; the others share the diagram (the grade is unchanged). */
+function scoredOnly(course) {
+  const gone = new Set(unfinished(course).map((t) => t.id));
+  return {
+    ...course,
+    assessmentTypes: course.assessmentTypes.filter((t) => !gone.has(t.id)),
+    groups: course.groups.map((g) => ({ ...g, types: g.types.filter((id) => !gone.has(id)) })),
+  };
+}
+
+/** A frame without its title, for a second panel beside one that already has it. */
+const untitled = (frame) => ({ ...frame, texts: frame.texts.filter((t) => t.key !== "title") });
+
+/** Name the assessments still to come, and their shares, above a diagram that leaves them out. */
+function withStillToCome(course, frame) {
+  const names = unfinished(course).map((t) => `${t.name} (${percent(t.weight)})`);
+  if (!names.length) return frame;
+  return { ...frame, texts: [...frame.texts, { key: "still-to-come", x: VIEW.w / 2, y: 64, text: `Still to come: ${names.join(", ")}`, size: 13, anchor: "middle", cls: "label label--small" }] };
+}
 const sparse = (course) => ({ ...course, scores: sparseOutcome });
 
 /** The course's scores grouped by assessment type (medium) or by course outcome (purpose). */
@@ -89,19 +121,22 @@ const STORIES = {
       photos: { show: "photo photo-right", frames: () => NOTHING },
       photo: { show: "photo", frames: () => NOTHING },
       circles: { float: true, frames: (c) => groupFrame(byMedium(c), VIEW, { labels: true }) },
-      fixed: { float: true, frames: (c) => groupFrame(byMedium(c), VIEW, { labels: true, weighted: true }) },
+      fixed: { float: true, frames: (c) => inRow(byMedium(c), atDiagram(c)) },
       diagram: {
         show: "bar",
-        frames: (c) => intoDiagram(groupFrame(byMedium(c), VIEW, { labels: true, weighted: true }), assessmentTypeFrame(c, "fill"), { k: 0.11, x: 36, y: 2 }),
+        frames: (c) => intoBins(inRow(byMedium(c), atDiagram(c)), atDiagram(c)),
       },
       // From here on the example is back at its default weights and can't be edited.
+      default: { reset: true, frames: (c) => calm(atDiagram(c)) },
+      staircase: { frames: (c) => assessmentTypeTrajectory(c) },
+      // Early in the semester: the assignments still to come are left out, so what there is has room;
+      // beside the diagram, the same scores stacked, where the few in-class scores stand tall.
       early: {
-        show: "grade", reset: true,
-        frames: (c) => calm(assessmentTypeFrame(early(c), "fill")),
+        show: "grade pair",
+        frames: (c) => withStillToCome(early(c), calm(atDiagram(scoredOnly(early(c))))),
+        pair: (c) => untitled(assessmentTypeTrajectory(early(c))),
         grade: (c) => assessmentTypeModel(early(c)).final,
       },
-      default: { frames: (c) => calm(assessmentTypeFrame(c, "fill")) },
-      staircase: { frames: (c) => assessmentTypeStaircase(c) },
     },
   },
   co: {
@@ -112,15 +147,15 @@ const STORIES = {
         float: true,
         frames: (c) => [groupFrame(byMedium(c), VIEW, { labels: true }), groupFrame(byPurpose(c), VIEW, { labels: true })],
       },
-      fixed: { float: true, frames: (c) => groupFrame(byPurpose(c), VIEW, { labels: true, weighted: true }) },
+      fixed: { float: true, frames: (c) => inRow(byPurpose(c), coDiagram(c)) },
       diagram: {
         show: "bar",
-        frames: (c) => intoDiagram(groupFrame(byPurpose(c), VIEW, { labels: true, weighted: true }), coDiagram(c)),
+        frames: (c) => intoBins(inRow(byPurpose(c), coDiagram(c)), coDiagram(c)),
       },
       multiplied: { show: "bar", frames: (c) => ({ ...withMultipliers(c, multipliedOnly(c, coDiagram(c))), duration: 600, stagger: 0 }) },
       sparse: {
         show: "grade", reset: true,
-        frames: (c) => calm(coFrame(sparse(c), "fill", { fixedBins: true })),
+        frames: (c) => calm(coDiagram(sparse(c))),
         grade: (c) => coModel(sparse(c)).final,
       },
       visualise: { show: "placeholder", reset: true, frames: () => NOTHING },
@@ -130,21 +165,28 @@ const STORIES = {
 
 function createStory(section, { view, scenes }) {
   const figure = section.querySelector(".story__figure");
-  const chart = createChart(figure.querySelector("svg"), view);
+  const chart = createChart(figure.querySelector(".panel svg"), view);
+  const pairSvg = figure.querySelector(".story__pair svg");
+  const pair = pairSvg && createChart(pairSvg, view);
   const store = createStore(explainerPresets);
   const bars = [...figure.querySelectorAll(".weights__bar")].map((el) => createWeightBar(el, store, el.dataset.list));
   const grade = figure.querySelector(".story__grade-value");
   let scene = null;
+  let leaving = null; // the scene just scrolled back up out of, if any
   let timer = null;
 
   /** Draw the scene; after an edit, jump straight to the end of its sequence. */
   function draw({ replay = true } = {}) {
     clearTimeout(timer);
-    const frames = [].concat(scenes[scene].frames(store.get()));
+    const course = store.get();
+    let frames = [].concat(scenes[scene].frames(course));
+    // Scrolling back up undoes the scene being left, frame by frame, then settles on this scene's last frame.
+    if (leaving) frames = [...[].concat(scenes[leaving].frames(course)).slice(0, -1).reverse(), frames.at(-1)];
     const play = (i) => {
       chart.render(frames[i]);
       if (i + 1 < frames.length) timer = setTimeout(() => play(i + 1), frames[i].hold ?? PAUSE);
     };
+    pair?.render(scenes[scene].pair?.(course) ?? NOTHING);
     const value = scenes[scene].grade?.(store.get()) ?? null;
     if (grade && value !== null) {
       grade.textContent = format(value);
@@ -155,6 +197,7 @@ function createStory(section, { view, scenes }) {
 
   function enter(name) {
     if (name === scene) return;
+    leaving = scene && order.indexOf(name) < order.indexOf(scene) ? scene : null;
     scene = name;
     const { show = "", float = false, reset = false } = scenes[name];
     figure.dataset.show = show;
@@ -175,6 +218,7 @@ function createStory(section, { view, scenes }) {
   // A step becomes active when it crosses the reading line: the middle of the screen beside the figure,
   // or lower down when the figure sits above the steps.
   const steps = [...section.querySelectorAll(".step")];
+  const order = steps.map((s) => s.dataset.scene);
   const stacked = section.classList.contains("story--stacked") || window.matchMedia("(max-width: 50rem)").matches;
   const observer = new IntersectionObserver(
     (entries) => entries.forEach((e) => {

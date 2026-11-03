@@ -6,10 +6,12 @@ import { createTimeline } from "./timeline.js";
 import { createWeightBar } from "./weights.js";
 import { createMultipliers } from "./multipliers.js";
 import { createChart } from "./chart.js";
-import { createSandbox } from "./sandbox.js";
 import { VIEW, STAGES, assessmentTypeFrame, coFrame } from "./scenes.js";
+import { calculation } from "./formula.js";
 
 const page = document.querySelector(".page");
+// The sized-scores pages draw both models as bins of bars sized by score.
+const sized = document.body.dataset.variant === "sized";
 const store = createStore();
 const views = [
   createTimeline(document.querySelector(".timeline"), store),
@@ -23,15 +25,27 @@ const views = [
 /* ---------- Demonstration ---------- */
 
 const demo = document.querySelector(".demo");
-const panels = [
-  { chart: createChart(demo.querySelector('[data-model="at"] svg'), VIEW), frame: assessmentTypeFrame },
-  { chart: createChart(demo.querySelector('[data-model="co"] svg'), VIEW), frame: coFrame },
-];
+// Each model's diagram, with its calculation written out beneath it (on the sized page, within the diagram).
+const panels = ["at", "co"].map((model) => {
+  const panel = demo.querySelector(`[data-model="${model}"]`);
+  return {
+    model,
+    chart: createChart(panel.querySelector("svg"), VIEW),
+    calc: panel.querySelector(".calc"),
+    frame: model === "at" ? assessmentTypeFrame : coFrame,
+  };
+});
 let stage = STAGES[0];
 
 function drawDemo() {
   const course = store.get();
-  panels.forEach((p) => p.chart.render(p.frame(course, stage)));
+  panels.forEach((p) => {
+    p.chart.render(p.frame(course, stage, { sized }));
+    // The sized page writes its calculation into the diagram itself.
+    if (!p.calc) return;
+    const html = calculation(course, p.model, stage, sized);
+    if (p.calc.innerHTML !== html) p.calc.innerHTML = html;
+  });
 }
 
 // Edits can arrive many times a second while dragging, so redraw the demo at most once per animation frame.
@@ -60,8 +74,6 @@ const observer = new IntersectionObserver(
   { rootMargin: narrow ? "-75% 0px -24% 0px" : "-50% 0px -49% 0px" },
 );
 steps.forEach((step) => observer.observe(step));
-
-const sandbox = createSandbox(document.querySelector(".sandbox"), store, () => page.dataset.mode);
 
 /* ---------- Controls ---------- */
 
@@ -106,4 +118,3 @@ views.forEach((v) => v.render());
 setMode(page.dataset.mode);
 followHash(location.hash);
 drawDemo();
-sandbox.render();

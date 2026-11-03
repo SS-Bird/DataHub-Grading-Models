@@ -13,7 +13,7 @@ const DRAG_THRESHOLD = 6;
 const CATEGORIES = ["type", "lo"];
 const SCORE = ["score"];
 
-export function createSandbox(section, source, mode) {
+export function createSandbox(section, source, mode, { sized = false } = {}) {
   const store = createStore();
   store.set(source.get());
   source.subscribe((course) => store.set(course));
@@ -28,7 +28,7 @@ export function createSandbox(section, source, mode) {
 
   function render() {
     for (const p of panels) {
-      const frame = p.frame(store.get(), "fill", { sandbox: true });
+      const frame = p.frame(store.get(), "fill", { sandbox: true, sized });
       p.targets = frame.targets;
       p.chart.render(frame);
     }
@@ -195,5 +195,5 @@ export function createSandbox(section, source, mode) {
 
   section.querySelector("[data-action='sandbox-reset']").addEventListener("click", () => store.set(source.get()));
 
-  return { render };
+  return { render, store };
 }

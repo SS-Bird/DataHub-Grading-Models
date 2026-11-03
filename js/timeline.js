@@ -12,7 +12,7 @@ const R = 15;
 const CELL = 38;
 const MAX_ROWS = 3;
 const FUTURE = 0.4; // a future session takes this share of a past session's space
-const SCORES = [1, 2, 3, 4, 5];
+const SCORES = [0, 1, 2, 3, 4, 5];
 
 const sum = (xs) => xs.reduce((a, b) => a + b, 0);
 

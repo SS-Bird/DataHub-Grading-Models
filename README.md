@@ -16,19 +16,26 @@ Then open http://localhost:8001
 
 | File | Responsibility |
 | --- | --- |
-| `index.html` | Main page: headings, explanation placeholders, scroll steps, system map |
-| `understanding-course-models.html` | Understanding Grading Models: scrolling stories for each model |
+| `index.html` | Understanding Grading Models (the landing page): scrolling stories for each model, drawn as bins |
+| `calculations.html` | Calculations for each Grading Model: an editable example course, worked through as bins |
+| `try-it-yourself.html` | Try It Yourself: drag scores into both models and edit the class structure |
+| `course-models-by-college.html` | Course Models used by College: a stream graph of each college's courses per model |
+| `understanding-original.html`, `calculations-original.html` | Earlier versions of the first two pages (areas instead of bins), under "Old versions" |
 | `css/styles.css` | All styling, including brand tokens and chart colours |
-| `js/data.js` | The default example course: scores, assessment types, course outcomes |
-| `js/store.js` | Editable state: a separate copy of the example per model |
+| `js/data.js` | The example courses and presets |
+| `js/store.js` | Editable state for an example course, and the rules for editing it |
 | `js/grading.js` | Pure grade calculations for both models |
-| `js/scenes.js` | One layout "frame" per scroll step |
-| `js/systemMap.js` | Layout for the side-by-side system map |
-| `js/editor.js` | "Edit example" panel for each model |
+| `js/formula.js` | The calculation written out under each diagram (original Calculations page) |
+| `js/scenes.js` | One layout "frame" per scroll step, for both the bin and the original diagrams |
 | `js/chart.js` | Draws a frame in SVG and animates between frames (D3) |
-| `js/main.js` | Wires scroll steps, charts, editors and the map to the store |
-| `js/pool.js` | Floating score pool frames (scattered, or gathered into circles) |
-| `js/understanding.js` | Understanding page: which scene each scroll step shows |
+| `js/pool.js` | Floating score pool frames (scattered, gathered into circles, or laid in a row) |
+| `js/timeline.js` | The editable semester timeline |
+| `js/weights.js`, `js/multipliers.js` | Draggable weight bars and CO multipliers |
+| `js/sandbox.js`, `js/popover.js` | Dragging scores into the diagrams; small edit panels |
+| `js/main.js` | Calculations pages: wires scroll steps, charts and controls to the store |
+| `js/understanding.js` | Understanding pages: which scene each scroll step shows |
+| `js/try.js` | Try It Yourself page |
+| `js/colleges.js` | Course Models used by College: the stream graph, its data and table |
 
 To change the default example, edit `js/data.js` (the Understanding page uses `explainer` there); equations and results update automatically.
-To add a step, add an `<article class="step">` in `index.html` and a frame in `js/scenes.js`.
+To add a step to the Calculations page, add an `<article class="step">` in `calculations.html` and a frame in `js/scenes.js`.

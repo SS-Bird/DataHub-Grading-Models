@@ -2,18 +2,22 @@
 // animates between frames, matching elements by `key`.
 //
 // Tokens are score markers: a rounded square that is a circle when `round` and a cube otherwise
-// (`w`/`h` stretch a cube so it can join its neighbours). Outlines are paths drawn above the tokens.
-// Rects with `fill` blend to that colour; `hatch` fills them with diagonal hatching.
+// (`w`/`h` stretch a cube so it can join its neighbours; `rx` sets its corners). Outlines are paths drawn above the tokens.
+// Rects with `fill` blend to that colour; `hatch` fills them with diagonal hatching; `start` ({ x, y, w, h })
+// is where a new rect grows from.
 // Links join two tokens (by key) and follow them as they move.
 // A frame may set `ease`, `duration` and `stagger` (delay per unit of an element's `order`).
-// Lines with `draw` trace themselves from start to end; `width` overrides their stroke width.
+// The ease applies to tokens only; the diagram itself (areas, lines, outlines, text) always moves smoothly.
+// Lines with `draw` trace themselves from start to end; `width` overrides their stroke width; `opacity` fades them.
 // Elements with `after` wait until the rest of their transition has finished.
+// Rects are drawn in the order they are listed.
 
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 
 const DURATION = 900;
 const STAGGER = 30;
-const EASES = { smooth: d3.easeCubicInOut, fall: d3.easeBounceOut, pop: d3.easeBackOut.overshoot(2) };
+const EASES = { smooth: d3.easeCubicInOut, fall: d3.easeBackOut.overshoot(0.6), pop: d3.easeBackOut.overshoot(1) };
+const SHAPE_EASE = d3.easeCubicInOut;
 
 let nextId = 0;
 
@@ -52,12 +56,14 @@ export function createChart(svg, view) {
       .data(frame.rects, byKey)
       .join(
         (enter) => enter.append("rect").attr("opacity", 0).attr("rx", (d) => d.rx ?? 0)
-          .attr("x", (d) => d.x).attr("y", (d) => d.y).attr("width", (d) => d.w).attr("height", (d) => d.h),
+          .attr("x", (d) => (d.start ?? d).x).attr("y", (d) => (d.start ?? d).y)
+          .attr("width", (d) => (d.start ?? d).w).attr("height", (d) => (d.start ?? d).h),
         (update) => update,
         fadeOut,
       )
+      .order()
       .attr("class", (d) => `area ${d.cls ?? ""}`);
-    rects.transition(t).delay(delay)
+    rects.transition(t).ease(SHAPE_EASE).delay(delay)
       .attr("opacity", (d) => d.opacity ?? 1)
       .attr("rx", (d) => d.rx ?? 0)
       .attr("x", (d) => d.x).attr("y", (d) => d.y).attr("width", (d) => d.w).attr("height", (d) => d.h);
@@ -74,7 +80,7 @@ export function createChart(svg, view) {
         fadeOut,
       )
       .attr("class", (d) => d.cls ?? "")
-      .transition(t).delay(delay)
+      .transition(t).ease(SHAPE_EASE).delay(delay)
       .attr("opacity", 1)
       .attr("d", (d) => d.d);
 
@@ -91,8 +97,8 @@ export function createChart(svg, view) {
       .style("stroke-width", (d) => d.width ?? null)
       .style("animation-duration", (d) => (d.draw ? `${duration}ms` : null))
       .style("animation-delay", (d) => (d.draw ? `${delay(d)}ms` : null))
-      .transition(t).delay(delay)
-      .attr("opacity", 1)
+      .transition(t).ease(SHAPE_EASE).delay(delay)
+      .attr("opacity", (d) => d.opacity ?? 1)
       .attr("x1", (d) => d.x1).attr("y1", (d) => d.y1).attr("x2", (d) => d.x2).attr("y2", (d) => d.y2);
 
     // Links start where their tokens were last drawn and end where they are now.
@@ -132,7 +138,7 @@ export function createChart(svg, view) {
       .call((g) => g.select("rect").transition(t).delay(delay)
         .attr("x", (d) => -(d.w ?? d.size) / 2).attr("y", (d) => -(d.h ?? d.size) / 2)
         .attr("width", (d) => d.w ?? d.size).attr("height", (d) => d.h ?? d.size)
-        .attr("rx", (d) => (d.round ? d.size / 2 : d.size * 0.14)))
+        .attr("rx", (d) => d.rx ?? (d.round ? d.size / 2 : d.size * 0.14)))
       .transition(t).delay(delay)
       .attr("opacity", (d) => d.opacity ?? 1)
       .attr("transform", translate);
@@ -160,7 +166,7 @@ export function createChart(svg, view) {
       .attr("class", (d) => `text ${d.cls ?? ""}`)
       .attr("text-anchor", (d) => d.anchor ?? "start")
       .text((d) => d.text)
-      .transition(t).delay(delay)
+      .transition(t).ease(SHAPE_EASE).delay(delay)
       .attr("opacity", 1)
       .attr("font-size", (d) => d.size ?? 14)
       .attr("x", (d) => d.x).attr("y", (d) => d.y);

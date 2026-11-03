@@ -17,7 +17,7 @@ const partWay = {
     { id: "a3", type: "a3", name: "Assignment 3" },
   ],
 
-  // Rubric scores (1–5) received so far.
+  // Rubric scores (0–5) received so far.
   scores: [
     { id: "s1", session: "c1", lo: "Vocabulary", score: 2 },
     { id: "s2", session: "c2", lo: "Spelling", score: 4 },
@@ -90,9 +90,27 @@ const bigDifference = {
 };
 
 export const presets = [
-  { id: "part-way", name: "Part-way", course: partWay },
-  { id: "finished", name: "Finished", course: finished },
-  { id: "big-difference", name: "Big difference", course: bigDifference },
+  { id: "part-way", name: "Typical Scores Mid-Semester", course: partWay },
+  { id: "finished", name: "Typical Finished Class", course: finished },
+  { id: "big-difference", name: "Large Final Grade Difference Between Models", course: bigDifference },
+];
+
+export const NUMBER_WORDS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
+
+/** The course with plain labels ("CO One", "LO One", …) in place of the example's names, for Try It Yourself. */
+function plainLabels(course) {
+  const rename = new Map(course.outcomes.flatMap((o) => o.los).map((lo, i) => [lo, `LO ${NUMBER_WORDS[i]}`]));
+  return {
+    ...course,
+    scores: course.scores.map((s) => ({ ...s, lo: rename.get(s.lo) })),
+    outcomes: course.outcomes.map((o, i) => ({ ...o, name: `CO ${NUMBER_WORDS[i]}`, los: o.los.map((lo) => rename.get(lo)) })),
+    loShort: {},
+  };
+}
+
+export const plainPresets = [
+  ...presets.map((p) => ({ ...p, course: plainLabels(p.course) })),
+  { id: "empty", name: "Empty", course: plainLabels({ ...partWay, scores: [] }) },
 ];
 
 /* ---------- Understanding Grading Models page ---------- */
@@ -120,8 +138,9 @@ const explainer = {
     ["final", "LO 1", 5], ["final", "LO 2", 4], ["final", "LO 3", 4], ["final", "LO 4", 4],
   ]),
   assessmentTypes: [
-    { id: "poll", name: "Polls", shortName: "Polls", weight: 0.1, multiplier: 1 },
-    { id: "comment", name: "Class Comments", shortName: "Comments", weight: 0.2, multiplier: 1 },
+    // Polls and comments have as many scores as each other and the same weight, so every in-class score counts the same.
+    { id: "poll", name: "Polls", shortName: "Polls", weight: 0.15, multiplier: 1 },
+    { id: "comment", name: "Class Comments", shortName: "Comments", weight: 0.15, multiplier: 1 },
     { id: "essay", name: "Essay", shortName: "Essay", weight: 0.15, multiplier: 2 },
     { id: "paper", name: "Research Paper", shortName: "Paper", weight: 0.25, multiplier: 3 },
     { id: "final", name: "Final Assignment", shortName: "Final", weight: 0.3, multiplier: 4 },
@@ -131,8 +150,8 @@ const explainer = {
     { id: "assignments", name: "Assignments", types: ["essay", "paper", "final"] },
   ],
   outcomes: [
-    { id: "technical", name: "Technical execution", weight: 0.6, los: ["LO 1", "LO 2"] },
-    { id: "testing", name: "Testing and Documentation", weight: 0.4, los: ["LO 3", "LO 4"] },
+    { id: "technical", name: "CO 1", weight: 0.6, los: ["LO 1", "LO 2"] },
+    { id: "testing", name: "CO 2", weight: 0.4, los: ["LO 3", "LO 4"] },
   ],
   loShort: {},
 };
@@ -140,13 +159,13 @@ const explainer = {
 export const explainerPresets = [{ id: "explainer", name: "Example", course: explainer }];
 
 // Early in the semester: a good essay, but a couple of poor in-class scores (and two middling ones)
-// pull the grade so far down to 2.67.
+// pull the grade so far down to 2.78.
 export const earlySemester = scores([
   ["p1", "LO 1", 2], ["k1", "LO 3", 1], ["p2", "LO 2", 3], ["k2", "LO 1", 2],
   ["essay", "LO 1", 4], ["essay", "LO 3", 4], ["essay", "LO 4", 5],
 ]);
 
-// Plenty of Technical execution scores, but only a couple of poor ones in Testing and Documentation.
+// Plenty of CO 1 scores, but only a couple of poor ones in CO 2.
 const testingLOs = explainer.outcomes.find((o) => o.id === "testing").los;
 export const sparseOutcome = [
   ...explainer.scores.filter((s) => !testingLOs.includes(s.lo)),

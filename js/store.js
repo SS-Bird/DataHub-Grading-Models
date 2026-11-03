@@ -5,6 +5,10 @@ import { presets } from "./data.js";
 
 const DEFAULT_SCORE = 3;
 export const MIN_WEIGHT = 0.05;
+export const MAX_ASSIGNMENTS = 6;
+export const MAX_LOS = 10;
+
+const sum = (xs) => xs.reduce((a, b) => a + b, 0);
 
 /** `starts` are the courses this store can load (re)start from; the first is the default. */
 export function createStore(starts = presets) {
@@ -128,6 +132,78 @@ export function createStore(starts = presets) {
 
     setMultiplier(typeId, multiplier) {
       change((c) => (c.assessmentTypes.find((t) => t.id === typeId).multiplier = multiplier));
+    },
+
+    /* ---------- Class structure (Try It Yourself) ---------- */
+
+    /** Add an assignment at the end of the semester, with an equal share of the weight taken from the others. */
+    addAssignment(name) {
+      if (course.assessmentTypes.filter((t) => t.id !== "class").length >= MAX_ASSIGNMENTS) return null;
+      const id = `x${nextId++}`;
+      change((c) => {
+        const total = sum(c.assessmentTypes.map((t) => t.weight));
+        const share = 1 / (c.assessmentTypes.length + 1);
+        c.assessmentTypes.forEach((t) => (t.weight *= 1 - share));
+        c.assessmentTypes.push({ id, name, shortName: name, weight: share * total, multiplier: 2 });
+        c.sessions.push({ id, type: id, name });
+        c.groups.find((g) => g.id === "assignments")?.types.push(id);
+      });
+      return id;
+    },
+
+    /** Remove an assignment and its scores; the others share out its weight. In-class scores can't be removed. */
+    removeAssignment(id) {
+      if (id === "class") return;
+      change((c) => {
+        const gone = c.assessmentTypes.find((t) => t.id === id);
+        c.assessmentTypes = c.assessmentTypes.filter((t) => t !== gone);
+        const rest = sum(c.assessmentTypes.map((t) => t.weight));
+        c.assessmentTypes.forEach((t) => (t.weight *= (rest + gone.weight) / rest));
+        const sessions = new Set(c.sessions.filter((s) => s.type === id).map((s) => s.id));
+        c.sessions = c.sessions.filter((s) => !sessions.has(s.id));
+        c.scores = c.scores.filter((s) => !sessions.has(s.session));
+        c.groups.forEach((g) => (g.types = g.types.filter((t) => t !== id)));
+      });
+    },
+
+    renameAssignment(id, name) {
+      change((c) => {
+        Object.assign(c.assessmentTypes.find((t) => t.id === id), { name, shortName: name });
+        c.sessions.filter((s) => s.type === id).forEach((s) => (s.name = name));
+      });
+    },
+
+    /** Add an LO to a course outcome. LOs are known by name, so names must be unique. */
+    addLO(outcomeId, name) {
+      const all = course.outcomes.flatMap((o) => o.los);
+      if (all.length >= MAX_LOS || all.includes(name)) return false;
+      change((c) => c.outcomes.find((o) => o.id === outcomeId).los.push(name));
+      return true;
+    },
+
+    /** Remove an LO and its scores; the last LO stays, since every score needs one. */
+    removeLO(lo) {
+      if (course.outcomes.flatMap((o) => o.los).length <= 1) return;
+      change((c) => {
+        c.outcomes.forEach((o) => (o.los = o.los.filter((x) => x !== lo)));
+        c.scores = c.scores.filter((s) => s.lo !== lo);
+        delete c.loShort[lo];
+      });
+    },
+
+    renameOutcome(id, name) {
+      change((c) => (c.outcomes.find((o) => o.id === id).name = name));
+    },
+
+    /** Returns false if the name is empty or already taken. */
+    renameLO(lo, name) {
+      if (!name || course.outcomes.some((o) => o.los.includes(name))) return false;
+      change((c) => {
+        c.outcomes.forEach((o) => (o.los = o.los.map((x) => (x === lo ? name : x))));
+        c.scores.forEach((s) => (s.lo = s.lo === lo ? name : s.lo));
+        delete c.loShort[lo];
+      });
+      return true;
     },
   };
 }

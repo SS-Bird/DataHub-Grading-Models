@@ -1,4 +1,4 @@
-// A vertical, draggable weight bar for one model's categories.
+// A draggable weight bar for one model's categories: vertical, or across with `{ horizontal: true }`.
 // Dragging the edge between two categories moves weight from one to the other.
 //   assessmentTypes / outcomes: every category's weight;
 //   groups: In-Class against Assignments, scaling the categories inside each;
@@ -48,8 +48,13 @@ const BARS = {
   },
 };
 
-export function createWeightBar(track, store, list) {
+export function createWeightBar(track, store, list, { horizontal = false } = {}) {
   const bar = BARS[list];
+  // Along the bar: where a segment starts and how long it is, and the pointer's position.
+  const axis = horizontal
+    ? { start: "left", length: "width", client: "clientX", orientation: "horizontal" }
+    : { start: "top", length: "height", client: "clientY", orientation: "vertical" };
+  track.classList.toggle("weights__bar--horizontal", horizontal);
   const items = () => bar.items(store.get());
   const tone = (item, i) => bar.tone?.(store.get(), item) ?? i % 2;
 
@@ -61,7 +66,7 @@ export function createWeightBar(track, store, list) {
     return el;
   });
 
-  /** Move the edge after segment i to `edge` (a share of the whole bar, from the top). */
+  /** Move the edge after segment i to `edge` (a share of the whole bar, from its start). */
   function moveEdge(i, edge) {
     const weights = items().map((t) => t.weight);
     const total = sum(weights);
@@ -80,7 +85,7 @@ export function createWeightBar(track, store, list) {
     handle.className = "weights__handle";
     handle.tabIndex = 0;
     handle.setAttribute("role", "slider");
-    handle.setAttribute("aria-orientation", "vertical");
+    handle.setAttribute("aria-orientation", axis.orientation);
     handle.setAttribute("aria-valuemin", "0");
     handle.setAttribute("aria-valuemax", "100");
     handle.setAttribute("aria-label", `${bar.title}: edge between ${bar.name(items()[i])} and ${bar.name(items()[i + 1])}`);
@@ -94,7 +99,7 @@ export function createWeightBar(track, store, list) {
     handle.addEventListener("pointermove", (e) => {
       if (!handle.hasPointerCapture(e.pointerId)) return;
       const r = track.getBoundingClientRect();
-      moveEdge(i, (e.clientY - r.top) / r.height);
+      moveEdge(i, (e[axis.client] - r[axis.start]) / r[axis.length]);
     });
     handle.addEventListener("lostpointercapture", () => track.classList.remove("is-dragging"));
     handle.addEventListener("keydown", (e) => {
@@ -115,14 +120,14 @@ export function createWeightBar(track, store, list) {
     list.forEach((item, i) => {
       const share = item.weight / total;
       const el = segments[i];
-      el.style.top = `${at * 100}%`;
-      el.style.height = `${share * 100}%`;
+      el.style[axis.start] = `${at * 100}%`;
+      el.style[axis.length] = `${share * 100}%`;
       el.classList.toggle("is-narrow", share < NARROW);
       el.classList.toggle("is-empty", !scored.has(item.id));
       el.querySelector(".weights__percent").textContent = percent(item.weight);
       at += share;
       if (handles[i]) {
-        handles[i].style.top = `${at * 100}%`;
+        handles[i].style[axis.start] = `${at * 100}%`;
         handles[i].setAttribute("aria-valuenow", String(Math.round(at * 100)));
         handles[i].setAttribute("aria-valuetext", `${bar.name(item)} ${percent(item.weight)}, ${bar.name(list[i + 1])} ${percent(list[i + 1].weight)}`);
       }
