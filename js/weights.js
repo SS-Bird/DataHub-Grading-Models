@@ -3,6 +3,8 @@
 //   assessmentTypes / outcomes: every category's weight;
 //   groups: In-Class against Assignments, scaling the categories inside each;
 //   withinGroups: the categories, but only within their group's share (the edges between groups stay put).
+//   los: each LO's share of the CO model, which follows from how many of its CO's scores it has (read only).
+// `min` is the smallest share of the whole bar any category can be dragged down to.
 
 import { assessmentTypeModel, coModel, percent } from "./grading.js";
 import { MIN_WEIGHT } from "./store.js";
@@ -39,6 +41,16 @@ const BARS = {
     items: (c) => assessmentTypeModel(c).groups,
     categories: (c) => assessmentTypeModel(c).groups.map((g) => ({ id: g.id, scores: g.types.flatMap((t) => t.scores) })),
     set: (store, weights) => store.setGroupWeights(weights),
+    // A group's categories shrink with it, so a group stops where its smallest category reaches the minimum.
+    floor: (g) => g.weight / Math.min(...g.types.map((t) => t.weight)),
+  },
+  los: {
+    title: "LO shares",
+    name: (lo) => lo.name,
+    items: (c) => coModel(c).outcomes.flatMap((o) => o.los),
+    categories: (c) => coModel(c).outcomes.flatMap((o) => o.los),
+    tone: (c, lo) => c.outcomes.findIndex((o) => o.los.includes(lo.id)) % 2,
+    fixed: () => true, // no edge can be dragged
   },
   withinGroups: {
     ...types,
@@ -48,7 +60,7 @@ const BARS = {
   },
 };
 
-export function createWeightBar(track, store, list, { horizontal = false } = {}) {
+export function createWeightBar(track, store, list, { horizontal = false, min = MIN_WEIGHT } = {}) {
   const bar = BARS[list];
   // Along the bar: where a segment starts and how long it is, and the pointer's position.
   const axis = horizontal
@@ -72,7 +84,12 @@ export function createWeightBar(track, store, list, { horizontal = false } = {})
     const total = sum(weights);
     const before = sum(weights.slice(0, i));
     const pair = weights[i] + weights[i + 1];
-    const upper = clamp(snap(edge * total - before), MIN_WEIGHT, pair - MIN_WEIGHT);
+    const floor = (j) => min * total * (bar.floor?.(items()[j]) ?? 1);
+    const lowest = floor(i);
+    const highest = pair - floor(i + 1);
+    if (lowest > highest) return;
+    // Rounded inwards, so a category never ends up just under the minimum.
+    const upper = clamp(snap(edge * total - before), Math.ceil(lowest / STEP - 1e-9) * STEP, Math.floor(highest / STEP + 1e-9) * STEP);
     weights[i] = upper;
     weights[i + 1] = snap(pair - upper);
     bar.set(store, weights);

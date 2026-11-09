@@ -215,6 +215,29 @@ button {
   position: relative;
 }
 
+.site-nav {
+  align-items: center;
+}
+
+/* Try It Yourself stands out as a button */
+.site-nav .site-nav__button {
+  display: inline-block;
+  padding: 0.35rem 0.95rem;
+  border: 1.5px solid var(--color-accent);
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 150ms, color 150ms;
+}
+
+.site-header .site-nav__button:hover,
+.site-header .site-nav__button:focus-visible,
+.site-header .site-nav__button[aria-current="page"] {
+  background: var(--color-accent);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
 .site-nav a,
 .site-nav__label {
   font-size: 0.9rem;
@@ -323,6 +346,16 @@ button {
   max-width: 72rem;
   margin: 0 auto;
   padding: 5rem var(--gutter) 3rem;
+}
+
+/* The example course, set apart in a rounded box */
+.example--boxed {
+  max-width: min(72rem, calc(100% - 2 * var(--gutter)));
+  margin-top: 3rem;
+  padding: 2rem clamp(1rem, 3vw, 2.5rem) 2.5rem;
+  background: var(--mu-white);
+  border: 1px solid var(--mu-light-grey);
+  border-radius: 20px;
 }
 
 .example__head {
@@ -496,6 +529,11 @@ button {
 
 .page[data-mode="at"] .co-only,
 .page[data-mode="co"] .at-only {
+  display: none !important;
+}
+
+/* Shown only while both models are compared */
+.page:not([data-mode="split"]) .split-only {
   display: none !important;
 }
 
@@ -799,9 +837,39 @@ button {
   color: var(--rubric-1);
 }
 
-.popover__remove:hover {
+.popover__remove:hover:not(:disabled) {
   background: var(--rubric-1);
   color: var(--mu-white);
+}
+
+.popover__remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.popover__hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+/* Adds the score chosen in the popover */
+.popover__add {
+  margin-top: 0.75rem;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem;
+  background: var(--color-accent);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.popover__add:hover,
+.popover__add:focus-visible {
+  background: var(--mu-orange);
 }
 
 /* ==========================================================================
@@ -857,17 +925,17 @@ button {
 
 .scrolly {
   display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr) 17rem;
+  grid-template-columns: 18.5rem minmax(0, 1fr) 18.5rem;
   grid-template-areas: "at figure co";
 }
 
 .page[data-mode="at"] .scrolly {
-  grid-template-columns: 20rem minmax(0, 1fr);
+  grid-template-columns: 22rem minmax(0, 1fr);
   grid-template-areas: "at figure";
 }
 
 .page[data-mode="co"] .scrolly {
-  grid-template-columns: minmax(0, 1fr) 20rem;
+  grid-template-columns: minmax(0, 1fr) 22rem;
   grid-template-areas: "figure co";
 }
 
@@ -886,7 +954,7 @@ button {
 
 /* One sidebar for both models, always to the left of the figure */
 .page[data-mode] .scrolly--shared {
-  grid-template-columns: 20rem minmax(0, 1fr);
+  grid-template-columns: 22rem minmax(0, 1fr);
   grid-template-areas: "steps figure";
 }
 
@@ -1737,9 +1805,10 @@ button.score-key__item {
   margin: 0;
   padding: 1.5rem;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 9rem;
-  grid-template-areas: "bar chart grade";
+  grid-template-columns: minmax(0, 1fr) 9rem;
+  grid-template-areas: "chart grade";
   gap: 1rem;
+  --bar-h: 2.2rem; /* each weight bar beneath the diagram */
 }
 
 .story__figure > * {
@@ -1748,6 +1817,7 @@ button.score-key__item {
 
 .story__figure .panel {
   grid-area: chart;
+  position: relative; /* the weight bars and the note are placed over it, lined up with the diagram */
 }
 
 /* A second panel beside the chart, shown only for scenes that pair two views */
@@ -1761,21 +1831,21 @@ button.score-key__item {
 }
 
 .story--figure-left .story__figure[data-show~="pair"] {
-  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) 9rem 24rem;
-  grid-template-areas: "bar chart pair grade .";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 9rem 26rem;
+  grid-template-areas: "chart pair grade .";
 }
 
 /* Figure on the left: the figure spans the whole story so the opening photos can sit symmetrically,
    and the steps scroll over its right-hand side. The steps' column turns dark after the opening spacer. */
 .story--figure-left {
-  grid-template-columns: minmax(0, 1fr) 24rem;
+  grid-template-columns: minmax(0, 1fr) 26rem;
 }
 
 .story--figure-left .story__figure {
   grid-column: 1 / -1;
   grid-row: 1;
-  grid-template-columns: auto minmax(0, 1fr) 9rem 24rem;
-  grid-template-areas: "bar chart grade .";
+  grid-template-columns: minmax(0, 1fr) 9rem 26rem;
+  grid-template-areas: "chart grade .";
 }
 
 .story--figure-left .story__steps {
@@ -1797,14 +1867,128 @@ button.score-key__item {
 }
 
 .story--figure-right {
-  grid-template-columns: 24rem minmax(0, 1fr);
+  grid-template-columns: 26rem minmax(0, 1fr);
   grid-template-areas: "steps figure";
 }
 
+/* Weight bars just beneath the diagram's floor, lined up with its bins (by script) so they name them */
 .story__weights {
-  grid-area: bar;
+  position: absolute;
   display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.story__weights .weights__bar {
+  height: var(--bar-h);
+}
+
+.story__weights .weights__segment + .weights__segment {
+  border-left: 1px solid rgb(255 255 255 / 0.7);
+}
+
+/* While the diagram is hovered: its scores as one shape in a box (the area they cover),
+   with a note on what that area means in place of the title above. */
+.story__note {
+  position: absolute;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  text-align: center;
+  transform: translateY(calc(-100% - 8px));
+  pointer-events: none;
+}
+
+.story__note[hidden] {
+  display: none;
+}
+
+.token--silhouette rect {
+  fill: var(--color-accent);
+  stroke: none;
+  shape-rendering: crispEdges;
+}
+
+/* The LO shares can't be dragged: hovering (or focusing) them explains why */
+.weights__bar--fixed {
+  cursor: not-allowed;
+}
+
+.weights__bar--fixed:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.weights__note {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  width: min(100%, 22rem);
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: var(--color-panel);
+  color: var(--color-on-panel);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.18);
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms, visibility 200ms;
+}
+
+.weights__bar--fixed:hover ~ .weights__note,
+.weights__bar--fixed:focus-visible ~ .weights__note {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Plays an animation in the figure, from within a step */
+.play-button {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  border: 1.5px solid var(--color-accent);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+
+.play-button:hover,
+.play-button:focus-visible {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+/* The old version's figure (understanding-original.html): its weight bars stand upright in a column of their own */
+.story__figure:has(> .story__weights) {
+  grid-template-columns: auto minmax(0, 1fr) 9rem;
+  grid-template-areas: "bar chart grade";
+}
+
+.story--figure-left .story__figure:has(> .story__weights) {
+  grid-template-columns: auto minmax(0, 1fr) 9rem 26rem;
+  grid-template-areas: "bar chart grade .";
+}
+
+.story--figure-left .story__figure:has(> .story__weights)[data-show~="pair"] {
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) 9rem 26rem;
+  grid-template-areas: "bar chart pair grade .";
+}
+
+.story__figure > .story__weights {
+  position: static;
+  grid-area: bar;
+  flex-direction: row;
   gap: 0.6rem;
+  margin: 0;
   padding: 10vh 0;
 }
 
@@ -1815,7 +1999,7 @@ button.score-key__item {
   width: 5rem;
 }
 
-.weights__segment + .weights__segment {
+.story__bar .weights__segment + .weights__segment {
   border-top: 1px solid rgb(255 255 255 / 0.7);
 }
 
@@ -1938,12 +2122,22 @@ img.story__photo {
   fill: var(--color-ink);
 }
 
+/* Inside the dark bins (outranking .panel .text) */
+.panel .multiplier-badge--on-dark {
+  fill: var(--mu-white);
+}
+
 .step__head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem 1rem;
+}
+
+.step > .skip {
+  align-self: flex-start;
+  margin-top: 0.5rem;
 }
 
 .skip {
@@ -1961,6 +2155,13 @@ img.story__photo {
   fill: none;
   stroke: var(--mu-black);
   stroke-width: 1;
+}
+
+/* Inside the CO circles: each score joined to its LO, like a network */
+.network-line {
+  stroke: var(--color-ink);
+  stroke-width: 1;
+  stroke-opacity: 0.35;
 }
 
 .is-floating .token > * {
@@ -2041,19 +2242,30 @@ img.story__photo {
     grid-row: auto;
     height: 70vh;
     padding: 0.5rem;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas: "bar chart";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "chart";
     background: var(--color-bg);
     z-index: 1;
   }
 
-  .story__bar {
-    width: 3.5rem;
+  .story--figure-left .story__figure[data-show~="pair"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "chart pair";
   }
 
-  .story--figure-left .story__figure[data-show~="pair"] {
+  /* The old version keeps its upright bars beside the chart */
+  .story .story__figure:has(> .story__weights) {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "bar chart";
+  }
+
+  .story .story__figure:has(> .story__weights)[data-show~="pair"] {
     grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas: "bar chart pair";
+  }
+
+  .story__bar {
+    width: 3.5rem;
   }
 
   .story__grade {
@@ -2135,7 +2347,7 @@ img.story__photo {
   font-weight: 700;
 }
 
-.college-chart__label { fill: var(--color-ink); font-size: 14px; }
+.college-chart__label { fill: var(--color-ink); font-size: 14px; stroke-width: 4px; stroke-linejoin: round; paint-order: stroke; pointer-events: none; }
 .college-chart__label--on-dark { fill: var(--mu-cream); }
 .college-chart__total { fill: var(--color-ink); font-size: 14px; font-variant-numeric: tabular-nums; }
 .college-chart__side { fill: var(--color-muted); font-size: 15px; }
@@ -2174,7 +2386,7 @@ img.story__photo {
 .college-chart__tooltip .is-picked { color: var(--mu-gold); font-weight: 700; }
 .college-chart__tooltip tfoot { border-top: 1px solid var(--mu-grey); font-weight: 700; }
 
-/* Legend: each college with its shade on each side */
+/* Legend: each college with its colour */
 .college-legend {
   display: flex;
   flex-wrap: wrap;

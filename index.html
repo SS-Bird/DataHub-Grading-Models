@@ -23,18 +23,13 @@
           </ul>
         </li>
         <li class="site-nav__item">
-          <a href="calculations.html">Calculations for each Grading Model <span aria-hidden="true">▾</span></a>
-          <ul class="site-nav__menu">
-            <li><a href="calculations.html#assessment-type-model">Assessment Type Model</a></li>
-            <li><a href="calculations.html#co-based-model">CO Based Model</a></li>
-            <li><a href="calculations.html#side-by-side">Side by Side</a></li>
-          </ul>
-        </li>
-        <li class="site-nav__item">
-          <a href="try-it-yourself.html">Try It Yourself</a>
+          <a href="calculations.html">Calculating Grading Models</a>
         </li>
         <li class="site-nav__item">
           <a href="course-models-by-college.html">Course Models Used by College</a>
+        </li>
+        <li class="site-nav__item site-nav__item--button">
+          <a class="site-nav__button" href="try-it-yourself.html">Try It Yourself</a>
         </li>
         <li class="site-nav__item">
           <span class="site-nav__label" tabindex="0">Old versions <span aria-hidden="true">▾</span></span>
@@ -76,7 +71,7 @@
 
     <section class="prose prose--tight" aria-labelledby="which-heading">
       <h2 id="which-heading">Do you know what Grading Model your class uses?</h2>
-      <p>If you navigate to Forum → Outcome Index → Courses → View Course Score Calculation, you will see either:</p>
+      <p>If you navigate to <a class="hc" target="_blank" rel="noopener" href="https://forum.minerva.edu/app/outcome-index?tab=glos">Forum → Outcome Index → Courses → View Course Score Calculation</a>, you will see either:</p>
     </section>
 
     <!-- Assessment Type Model: the figure spans the story; the steps scroll over its right-hand side -->
@@ -86,18 +81,14 @@
           <img class="photo photo--left" src="images/forum-assessment-type-model.png" alt="Forum's Course Score Calculation for a course graded with the Assessment Type Model: assignments and in-class score categories, each with its share of the course score">
           <img class="photo photo--right" src="images/forum-co-model.png" alt="Forum's Course Score Calculation for a course graded with the CO Based Model: LOs and HCs arranged within Course Outcomes">
         </div>
-        <div class="story__weights">
-          <div class="story__bar">
-            <p class="side__title">In-Class vs Assignments</p>
+        <!-- The diagram, with its weights in bars lined up beneath its bins, naming them -->
+        <div class="panel">
+          <svg role="img" preserveAspectRatio="xMaxYMid meet" aria-label="Animated example of the Assessment Type Model"></svg>
+          <p class="story__note" hidden>The area covered represents the final grade. A theoretically (impossibly) perfect grade would completely fill the area, while all zeros will leave the area totally empty.</p>
+          <div class="story__weights">
+            <div class="weights__bar" data-list="withinGroups" role="group" aria-label="Weight of each assessment type, within In-Class and within Assignments"></div>
             <div class="weights__bar" data-list="groups" role="group" aria-label="In-Class against Assignments weights"></div>
           </div>
-          <div class="story__bar">
-            <p class="side__title">Within Each</p>
-            <div class="weights__bar" data-list="withinGroups" role="group" aria-label="Weights within In-Class and within Assignments"></div>
-          </div>
-        </div>
-        <div class="panel">
-          <svg role="img" aria-label="Animated example of the Assessment Type Model"></svg>
         </div>
         <!-- Beside the diagram for the last step: the same scores stacked in timeline order -->
         <div class="panel story__pair">
@@ -111,11 +102,9 @@
       <div class="story__steps">
         <div class="step step--spacer" data-scene="photos" aria-hidden="true"></div>
         <article id="assessment-type-model" class="step" data-scene="photo">
-          <div class="step__head">
-            <h2>Assessment Type Model</h2>
-            <a class="skip" href="#co-based-model">Click here to skip to the CO Based Model</a>
-          </div>
+          <h2>Assessment Type Model</h2>
           <p>If your Forum looks like this photo on the left, with assignment and in-class score categories, you are being graded within the <strong>Assessment Type Model</strong>.</p>
+          <a class="skip" href="#co-based-model">Click here to skip to the CO Based Model <span aria-hidden="true">↓</span></a>
         </article>
         <article class="step" data-scene="circles">
           <p>The Assessment Type Model divides the system according to each score's <a class="hc" target="_blank" rel="noopener" href="https://my.minerva.edu/academics/hc-resources/hc-handbook/medium/">#Medium</a>: for example, a poll, an essay (assignment), an interview (assignment), or class participation.</p>
@@ -125,8 +114,11 @@
         </article>
         <article class="step" data-scene="diagram">
           <p>Each assessment type, which is the unit of division for this system mapping, maps to one ‘bin’. All scores from that assessment type fill its bin.</p>
-          <p>The more scores in a bin, the less any individual score is worth.</p>
           <p>Scores from important assessments, with wide bins, will have a larger impact on the grade.</p>
+        </article>
+        <article class="step" data-scene="unfold">
+          <p>The more scores in a bin, the less any individual score is worth.</p>
+          <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
         </article>
         <article class="step" data-scene="default">
           <p>The Assessment Type Model makes it easy for the student to see the importance of each assignment.</p>
@@ -162,6 +154,9 @@
           <p>So assignments are given ‘weights’. The weight of an assignment “multiplies” each score from the assignment, or “adds the score to the bin” many times.</p>
           <p>This is written as ‘2×’ to say “score added twice”.</p>
         </article>
+        <article class="step" data-scene="unfold">
+          <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        </article>
         <article class="step" data-scene="sparse">
           <p>Sometimes grades can look weird when the student has received few scores within an important course outcome. If it's early in the semester, as always, try your best and trust the process, but within the CO Based Model the student can change this more directly by intentionally applying an LO from that CO in class to seek out more feedback and scores within that category.</p>
         </article>
@@ -170,14 +165,15 @@
         </article>
       </div>
       <figure class="story__figure">
-        <div class="story__weights">
-          <div class="story__bar">
-            <p class="side__title">CO Weights</p>
-            <div class="weights__bar" data-list="outcomes" role="group" aria-label="CO Based Model weights"></div>
-          </div>
-        </div>
         <div class="panel">
-          <svg role="img" aria-label="Animated example of the CO Based Model"></svg>
+          <svg role="img" preserveAspectRatio="xMaxYMid meet" aria-label="Animated example of the CO Based Model"></svg>
+          <p class="story__note" hidden>The area covered represents the final grade. A theoretically (impossibly) perfect grade would completely fill the area, while all zeros will leave the area totally empty.</p>
+          <div class="story__weights">
+            <!-- Read only: each LO's share follows from how many of its CO's scores it has -->
+            <div class="weights__bar weights__bar--fixed" data-list="los" role="group" tabindex="0" aria-label="Each LO's share of the grade" aria-describedby="lo-share-note"></div>
+            <div class="weights__bar" data-list="outcomes" role="group" aria-label="CO Based Model weights"></div>
+            <p id="lo-share-note" class="weights__note">The share that each LO is worth is not pre-assigned; the share of the grade coming from each LO is a consequence of how many times it's applied.</p>
+          </div>
         </div>
         <div class="story__grade">
           <p class="side__title">Course grade to date</p>

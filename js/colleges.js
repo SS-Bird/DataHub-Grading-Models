@@ -1,7 +1,7 @@
 // Entry point for the Course Models Used by College page: a stream graph of how many courses each college graded
 // with each model, semester by semester. Assessment Type courses stack up above the line, CO courses down below it,
 // one band per college, largest colleges nearest the line. Recreated from a peer's chart, with its numbers below.
-// A college keeps the same shade on both sides; bands are named directly where they have room, hovering a semester
+// A college keeps its college colour on both sides; bands are named directly where they have room, hovering a semester
 // lists every college's counts, hovering a band picks it out, and the same numbers are in a table beneath.
 
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
@@ -30,11 +30,21 @@ const COUNTS = {
 
 const SHORT = { "Arts and Humanities": "Arts & Humanities", "Computational Sciences": "Computational Sci." };
 
-// Each model's shades run from dark (the largest college, nearest the line) to light.
 const MODELS = [
-  { id: "AT", name: "Assessment Type", side: -1, shades: ["#5c4108", "#8a6311", "#b8861a", "#e0aa1f", "#f2c75a", "#f8e2a2"] },
-  { id: "CO", name: "CO Based", side: 1, shades: ["#21143f", "#3b2970", "#5b3e97", "#7d63b8", "#a592d4", "#cfc4ec"] },
+  { id: "AT", name: "Assessment Type", side: -1 },
+  { id: "CO", name: "CO Based", side: 1 },
 ];
+
+// Each college in its own colour from the college colour rubric, the same on both sides of the line.
+// Cornerstone has no college colour, so it takes the brand grey. (The rubric's Sustainability, Umber #944a20, has no courses here.)
+const COLOURS = {
+  "Arts and Humanities": "#871d1a", // Jasper
+  "Computational Sciences": "#125b6d", // Fennel
+  "Natural Sciences": "#56662d", // Nightshade
+  "Social Sciences": "#90702b", // Honey
+  "Business": "#4a3279", // Violet
+  "Cornerstone": "#595959", // brand grey
+};
 
 const VIEW = { w: 1000, h: 620 };
 const M = { top: 60, right: 70, bottom: 40, left: 80 };
@@ -44,7 +54,6 @@ const sum = (xs) => xs.reduce((a, b) => a + b, 0);
 const totalOf = (college) => sum(MODELS.map((m) => sum(COUNTS[m.id][college])));
 const colleges = Object.keys(COUNTS.AT).sort((a, b) => totalOf(b) - totalOf(a)); // largest first
 const semesterTotal = (model, j) => sum(colleges.map((c) => COUNTS[model.id][c][j]));
-const darkShade = (i) => i < 3; // the darker half of the shades takes light text
 
 const figure = document.querySelector(".college-chart");
 const svg = d3.select(figure.querySelector("svg")).attr("viewBox", `0 0 ${VIEW.w} ${VIEW.h}`);
@@ -73,10 +82,11 @@ const area = (model) => d3.area()
   .curve(d3.curveMonotoneX);
 
 const bands = [];
+const labels = []; // drawn after every band, so no band covers another's name
 for (const model of MODELS) {
   const g = svg.append("g").attr("class", "college-chart__model");
   let below = SEMESTERS.map(() => 0);
-  colleges.forEach((college, i) => {
+  colleges.forEach((college) => {
     const counts = COUNTS[model.id][college];
     if (!sum(counts)) return; // a college with no courses on this side has no band
     const stack = counts.map((n, j) => [below[j], below[j] + n]);
@@ -84,18 +94,14 @@ for (const model of MODELS) {
     const path = g.append("path")
       .attr("class", "college-chart__band")
       .attr("d", area(model)(stack))
-      .attr("fill", model.shades[i]);
+      .attr("fill", COLOURS[college]);
     bands.push({ model, college, path });
 
     // Named where the band is thickest, if it has room there.
     const j = d3.maxIndex(counts);
     if (counts[j] * perCourse >= MIN_LABEL) {
       const labelX = Math.min(Math.max(x(SEMESTERS[j]), M.left + 75), VIEW.w - M.right - 75);
-      g.append("text")
-        .attr("class", `college-chart__label${darkShade(i) ? " college-chart__label--on-dark" : ""}`)
-        .attr("x", labelX).attr("y", yOf(model, (stack[j][0] + stack[j][1]) / 2))
-        .attr("text-anchor", "middle").attr("dominant-baseline", "central")
-        .text(SHORT[college] ?? college);
+      labels.push({ college, x: labelX, y: yOf(model, (stack[j][0] + stack[j][1]) / 2) });
     }
   });
 
@@ -158,11 +164,19 @@ svg.on("pointermove", (event) => {
 });
 svg.on("pointerleave", hide);
 
+// Light names (every college colour is dark), each edged in its band's colour so it still reads where it runs past the band.
+svg.append("g").selectAll("text").data(labels).join("text")
+  .attr("class", "college-chart__label college-chart__label--on-dark")
+  .attr("x", (d) => d.x).attr("y", (d) => d.y)
+  .attr("stroke", (d) => COLOURS[d.college])
+  .attr("text-anchor", "middle").attr("dominant-baseline", "central")
+  .text((d) => SHORT[d.college] ?? d.college);
+
 /* ---------- Legend and table ---------- */
 
-document.querySelector(".college-legend").innerHTML = colleges.map((c, i) => `
+document.querySelector(".college-legend").innerHTML = colleges.map((c) => `
   <li>
-    ${MODELS.map((m) => `<span class="college-legend__swatch" style="background:${m.shades[i]}" title="${m.name}"></span>`).join("")}
+    <span class="college-legend__swatch" style="background:${COLOURS[c]}"></span>
     ${c}
   </li>`).join("");
 

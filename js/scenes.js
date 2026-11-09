@@ -538,6 +538,13 @@ const SIZED_TIMING = {
 const SIZED_AXIS = 132;
 const LABELS = { above: 28, below: 44 }; // room above a bin's walls and below its floor
 const ASPECT = W / (744 - LABELS.below - (184 + LABELS.above)); // the full-size bins' width to height
+const UNLABELLED_FLOOR = 2; // room below the floor of bins drawn without labels: just their walls
+
+// The Understanding page's diagram on its own: a little shorter and wider than the full-size one, just under its title,
+// with no labels beneath its floor; the page's weight bars sit there instead and name its bins.
+const ALONE = { x: 20, w: 600, top: 64, bottom: 664 };
+/** Where the Understanding page's sized bins sit in the panel: across, the top of their walls, and their floor. */
+export const ALONE_SPAN = { x: ALONE.x, w: ALONE.w, top: ALONE.top + LABELS.above - 12, base: ALONE.bottom - UNLABELLED_FLOOR };
 
 /** An area ({ x, w, top, bottom }) whose bins keep the full-size diagram's shape, centred across the panel. */
 function sizedArea(top, bottom = 744) {
@@ -552,8 +559,8 @@ const BIN_GAP = 14;
 const BAR_GAP = 2;
 
 /** Room for the bins: their floor, the top of their walls, and the height of one point of score. */
-function binSpace(area) {
-  const base = area.bottom - LABELS.below;
+function binSpace(area, below = LABELS.below) {
+  const base = area.bottom - below;
   const top = area.top + LABELS.above;
   return { base, top, unit: (base - top - 16) / SCORE_MAX };
 }
@@ -626,14 +633,15 @@ const levelBox = (inner, base, unit, value) => ({ x: inner.x, y: base - value * 
  * with `entries` the scores in floor order (null keeps an empty slot) and `spans` ({ id, name, count }) runs of
  * entries named under the floor (the CO model's LOs). `area` may set `x` and `w` (the panel's width otherwise).
  *   keepEmpty: keep bins without scores (no cutting); multipliers: label scores counted more than once;
- *   gradeLine: a line across the bins at the height of the grade to date.
+ *   gradeLine: a line across the bins at the height of the grade to date;
+ *   labels: false leaves the bins and their LOs unnamed, and puts their floor on the bottom of the area.
  */
-function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind, multipliers = false, gradeLine = false }) {
+function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind, multipliers = false, gradeLine = false, labels = true }) {
   const L = sizedIndex(stage);
   const f = blank();
   if (L < sizedIndex("frame")) return f;
 
-  const { base, top, unit } = binSpace(area);
+  const { base, top, unit } = binSpace(area, labels ? LABELS.below : UNLABELLED_FLOOR);
   const x = area.x ?? X0;
   const w = area.w ?? W;
   const total = sum(cats.map((c) => c.weight)) || 1;
@@ -660,7 +668,7 @@ function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind
     const inner = { x: box.x + 6, w: box.w - 12 };
     // Every bin is dark; one without scores yet is hatched instead.
     openBin(f, `bin-${c.id}`, box, top, base, { cls: "area--1", hatch: c.average === null });
-    f.texts.push({
+    if (labels) f.texts.push({
       key: `bin-lbl-${c.id}`, x: box.x + box.w / 2, y: base + (c.spans ? 34 : 18), text: `${c.name} · ${percent(c.weight)}`,
       size: clamp(box.w / 7, 9, 13), anchor: "middle", cls: "label label--strong",
     });
@@ -672,7 +680,7 @@ function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind
       (c.spans ?? []).forEach((span) => {
         const run = { x: cells[k].x, w: span.count * cells[k].w };
         k += span.count;
-        f.texts.push({ key: `lo-lbl-${span.id}`, x: run.x + run.w / 2, y: base + 16, text: span.name, size: clamp(run.w / 6, 9, 12), anchor: "middle", cls: "label label--small" });
+        if (labels) f.texts.push({ key: `lo-lbl-${span.id}`, x: run.x + run.w / 2, y: base + 16, text: span.name, size: clamp(run.w / 6, 9, 12), anchor: "middle", cls: "label label--small" });
         f.targets.push({ kind, id: span.id, x: run.x, y: top, w: run.w, h: base - top });
       });
       if (!c.spans) f.targets.push({ kind, id: c.id, x: box.x, y: top, w: box.w, h: base - top });
@@ -859,7 +867,7 @@ function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind,
     }));
     return { ...frame, ...SANDBOX_TIMING };
   }
-  if (sized && alone) return { ...merge(title(name), bins(stage, BIG, { keepEmpty: true })), ...SIZED_TIMING[stage] };
+  if (sized && alone) return { ...merge(title(name), bins(stage, ALONE, { keepEmpty: true, labels: false })), ...SIZED_TIMING[stage] };
   if (sized) return sizedDemo(stage, name, ex, bins, sizedCats, final);
   const L = stageIndex(stage);
   let body;
@@ -912,6 +920,38 @@ export function coFrame(course, stage, options = {}) {
 }
 
 /**
+ * A model's scores as one silhouette in a single box, for the Understanding page: the box is the diagram's whole area
+ * (every score a 5), and each score a slice as wide as its share of the grade and as tall as its score, with no gaps
+ * between bins, so the area the shape covers is the grade. `cats` are the bins ({ weight, scores }), in order; slices
+ * keep their scores' keys, so the diagram's bars close up into the shape.
+ */
+function silhouette(cats) {
+  const { base, unit } = binSpace(ALONE, UNLABELLED_FLOOR);
+  const box = { x: ALONE.x, w: ALONE.w, top: base - SCORE_MAX * unit };
+  const scored = cats.filter((c) => c.scores.length);
+  const total = sum(scored.map((c) => c.weight)) || 1;
+  const f = blank();
+  let x = box.x;
+  scored.forEach((c) => {
+    const w = (box.w * c.weight) / total / c.scores.length;
+    c.scores.forEach((s) => {
+      const h = s.score * unit;
+      // A hair wider than its slice, so neighbours overlap and no seam shows between them.
+      f.tokens.push(token(s, x + w / 2, base - h / 2, w, { w: w + 0.6, h, round: false, rx: 0, text: "", cls: "token--silhouette" }));
+      x += w;
+    });
+  });
+  f.paths.push({ key: "silhouette-box", cls: "bin", d: `M${box.x},${box.top}H${box.x + box.w}V${base}H${box.x}Z` });
+  return { ...f, ease: "smooth", duration: 500, stagger: 0 };
+}
+
+/** The Assessment Type Model's silhouette: a bin for each assessment type. */
+export const assessmentTypeSilhouette = (course) => silhouette(assessmentTypeModel(course).types);
+
+/** The CO Model's silhouette: a bin for each CO, its (multiplied) scores in LO order, as in its diagram. */
+export const coSilhouette = (course) => silhouette(coModel(course).outcomes.map((co) => ({ weight: co.weight, scores: co.los.flatMap((lo) => lo.scores) })));
+
+/**
  * The Assessment Type Model's trajectory: a staircase in timeline order, rising from bottom left to top right.
  * Each score is a block as tall as its share of the grade so far (its type's weight, shared equally among that type's
  * scores), so blocks within a type are all one height and the staircase reaches 100%; colour shows the score.
@@ -955,6 +995,7 @@ export function assessmentTypeTrajectory(course) {
     }
   });
   f.lines.push({ key: "stair-floor", cls: "axis", x1: X0, y1: base, x2: X0 + width, y2: base });
+  f.texts.push({ key: "stair-time", x: X0 + width / 2, y: base + 28, text: "Time →", size: 14, anchor: "middle", cls: "label label--strong" });
 
   // The shares, on the right: one line for the assignments, and a broken line for the in-class scores beside it.
   const assignmentLine = X0 + width + 22;

@@ -23,18 +23,13 @@
           </ul>
         </li>
         <li class="site-nav__item">
-          <a href="calculations.html" aria-current="page">Calculations for each Grading Model <span aria-hidden="true">▾</span></a>
-          <ul class="site-nav__menu">
-            <li><a href="calculations.html#assessment-type-model">Assessment Type Model</a></li>
-            <li><a href="calculations.html#co-based-model">CO Based Model</a></li>
-            <li><a href="calculations.html#side-by-side">Side by Side</a></li>
-          </ul>
-        </li>
-        <li class="site-nav__item">
-          <a href="try-it-yourself.html">Try It Yourself</a>
+          <a href="calculations.html" aria-current="page">Calculating Grading Models</a>
         </li>
         <li class="site-nav__item">
           <a href="course-models-by-college.html">Course Models Used by College</a>
+        </li>
+        <li class="site-nav__item site-nav__item--button">
+          <a class="site-nav__button" href="try-it-yourself.html">Try It Yourself</a>
         </li>
         <li class="site-nav__item">
           <span class="site-nav__label" tabindex="0">Old versions <span aria-hidden="true">▾</span></span>
@@ -64,7 +59,7 @@
     </section>
 
     <!-- The example course: edited directly on the timeline, weight bars and multipliers -->
-    <section class="example" aria-labelledby="example-heading">
+    <section class="example example--boxed" aria-labelledby="example-heading">
       <div class="example__head">
         <h2 id="example-heading">An Example Course</h2>
       </div>
@@ -72,7 +67,7 @@
       <div class="presets" role="group" aria-label="Start from">
         <button type="button" class="button-quiet" data-preset="part-way" aria-pressed="false">Typical Scores Mid-Semester</button>
         <button type="button" class="button-quiet" data-preset="finished" aria-pressed="false">Typical Finished Class</button>
-        <button type="button" class="button-quiet" data-preset="big-difference" aria-pressed="false">Large Final Grade Difference Between Models</button>
+        <button type="button" class="button-quiet split-only" data-preset="big-difference" aria-pressed="false">Large Final Grade Difference Between Models</button>
         <button type="button" class="button-quiet button-quiet--reset" data-action="reset" aria-label="Reset to the selected starting point">↺</button>
       </div>
 

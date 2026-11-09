@@ -1,6 +1,6 @@
 // Interactive semester timeline. Classes jut up as single scores; assignments hang below as groups of scores.
 // Sessions still to come are greyed out and packed closer together; only the next one can be filled in.
-// Everything is edited in place: click a score to change it, a grey slot to add one.
+// Everything is edited in place: click a score to change or remove it, a "+" slot to choose a score and add it.
 
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 import { openPopover, closePopover } from "./popover.js";
@@ -13,6 +13,7 @@ const CELL = 38;
 const MAX_ROWS = 3;
 const FUTURE = 0.4; // a future session takes this share of a past session's space
 const SCORES = [0, 1, 2, 3, 4, 5];
+const DEFAULT_SCORE = 3; // a new score starts here until another is picked
 
 const sum = (xs) => xs.reduce((a, b) => a + b, 0);
 
@@ -47,38 +48,69 @@ export function createTimeline(svg, store) {
 
   /* ---------- popovers ---------- */
 
+  /** The score buttons and each CO's LO chips, with `value` and `lo` pressed. */
+  function picker(value, lo) {
+    return `
+      <div class="popover__scores" role="group" aria-label="Score">
+        ${SCORES.map((n) => `<button type="button" class="swatch swatch--${n}" data-value="${n}" aria-pressed="${n === value}">${n}</button>`).join("")}
+      </div>
+      ${course().outcomes.map((co) => `
+        <div class="popover__group" role="group" aria-label="${co.name} learning outcomes">
+          <span class="popover__co">${co.name}</span>
+          ${co.los.map((name) => `<button type="button" class="chip" data-lo="${name}" aria-pressed="${name === lo}">${name}</button>`).join("")}
+        </div>`).join("")}`;
+  }
+
+  /** Keep focus on the button just pressed after the popover is redrawn. */
+  const refocus = (pop, button) => pop.querySelector(`[data-value="${button.dataset.value}"], [data-lo="${button.dataset.lo}"]`)?.focus();
+
+  /** Edit an existing score in place; it can be removed from here too, where the timeline's order allows. */
   function editScore(id, anchor) {
     const session = course().sessions.find((s) => s.id === course().scores.find((x) => x.id === id).session);
     openPopover(anchor, `Edit score from ${session.name}`, function fill(pop) {
       const score = course().scores.find((s) => s.id === id);
       if (!score) return closePopover();
+      const removable = store.canRemove(id);
       pop.innerHTML = `
         <p class="popover__title">${session.name}</p>
-        <div class="popover__scores" role="group" aria-label="Score">
-          ${SCORES.map((n) => `<button type="button" class="swatch swatch--${n}" data-value="${n}" aria-pressed="${n === score.score}">${n}</button>`).join("")}
-        </div>
-        ${course().outcomes.map((co) => `
-          <div class="popover__group" role="group" aria-label="${co.name} learning outcomes">
-            <span class="popover__co">${co.name}</span>
-            ${co.los.map((lo) => `<button type="button" class="chip" data-lo="${lo}" aria-pressed="${lo === score.lo}">${lo}</button>`).join("")}
-          </div>`).join("")}
-        ${store.canRemove(id) ? `<button type="button" class="popover__remove" data-remove>Remove score</button>` : ""}`;
+        ${picker(score.score, score.lo)}
+        <button type="button" class="popover__remove" data-remove ${removable ? "" : "disabled"}>Remove score</button>
+        ${removable ? "" : `<p class="popover__hint">Only the latest score, or one of several in an assignment, can be removed.</p>`}`;
       pop.onclick = (e) => {
         const button = e.target.closest("button");
-        if (!button) return;
+        if (!button || button.disabled) return;
         if (button.dataset.value) store.editScore(id, { score: Number(button.dataset.value) });
         else if (button.dataset.lo) store.editScore(id, { lo: button.dataset.lo });
         else if ("remove" in button.dataset) return void (store.removeScore(id), closePopover());
         fill(pop);
-        pop.querySelector(`[data-value="${button.dataset.value}"], [data-lo="${button.dataset.lo}"]`)?.focus();
+        refocus(pop, button);
       };
     });
   }
 
-  function add(sessionId) {
-    const id = store.addScore(sessionId);
-    const el = id && svg.querySelector(`[data-score="${id}"]`);
-    if (el) editScore(id, el);
+  /** Choose a new score's value and LO, then add it with "Add score". */
+  function add(sessionId, anchor) {
+    const session = course().sessions.find((s) => s.id === sessionId);
+    const draft = { score: DEFAULT_SCORE, lo: course().scores.at(-1)?.lo ?? course().outcomes[0].los[0] };
+    openPopover(anchor, `Add a score to ${session.name}`, function fill(pop) {
+      pop.innerHTML = `
+        <p class="popover__title">${session.name}</p>
+        ${picker(draft.score, draft.lo)}
+        <button type="button" class="popover__add" data-add>Add score</button>`;
+      pop.onclick = (e) => {
+        const button = e.target.closest("button");
+        if (!button) return;
+        if (button.dataset.value) draft.score = Number(button.dataset.value);
+        else if (button.dataset.lo) draft.lo = button.dataset.lo;
+        else if ("add" in button.dataset) {
+          const id = store.addScore(sessionId);
+          if (id) store.editScore(id, draft);
+          return void closePopover();
+        }
+        fill(pop);
+        refocus(pop, button);
+      };
+    });
   }
 
   function shake(el) {
@@ -100,7 +132,7 @@ export function createTimeline(svg, store) {
 
   function addSlot(parent, x, y, r, label, sessionId) {
     const g = parent.append("g").attr("class", "tl-slot").attr("transform", `translate(${x},${y})`);
-    asButton(g, label, () => add(sessionId));
+    asButton(g, label, (el) => add(sessionId, el));
     const inner = g.append("g").attr("class", "tl-slot__inner");
     inner.append("circle").attr("class", "tl-slot__pulse").attr("r", r);
     inner.append("circle").attr("r", r);
