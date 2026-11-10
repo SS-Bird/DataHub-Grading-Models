@@ -113,7 +113,7 @@ function tetrisPieces(cells, cell, { gap, rowsUp = false, cube = false, squareCl
   return { tokens, outlines };
 }
 
-const title = (text) => ({ texts: [{ key: "title", x: VIEW.w / 2, y: 36, text, size: 22, anchor: "middle", cls: "title" }] });
+const title = (text, view = VIEW) => ({ texts: [{ key: "title", x: view.w / 2, y: 36, text, size: 22, anchor: "middle", cls: "title" }] });
 
 const averageText = (key, value, x, y, weight, cls = "") => ({
   key, x, y, text: format(value), size: averageSize(weight), anchor: "middle", cls: `average ${cls}`,
@@ -543,8 +543,22 @@ const UNLABELLED_FLOOR = 2; // room below the floor of bins drawn without labels
 // The Understanding page's diagram on its own: a little shorter and wider than the full-size one, just under its title,
 // with no labels beneath its floor; the page's weight bars sit there instead and name its bins.
 const ALONE = { x: 20, w: 600, top: 64, bottom: 664 };
-/** Where the Understanding page's sized bins sit in the panel: across, the top of their walls, and their floor. */
-export const ALONE_SPAN = { x: ALONE.x, w: ALONE.w, top: ALONE.top + LABELS.above - 12, base: ALONE.bottom - UNLABELLED_FLOOR };
+
+/**
+ * How the Understanding page lays out a diagram on its own: the panel's viewBox (`view`), where the bins sit (`alone`),
+ * and where the trajectory staircase sits (`stairs`: its left, width, top of the whole grade, and floor).
+ * TALL is the usual panel; SQUAT is a much wider, shorter one (tried for the Assessment Type Model).
+ */
+export const TALL = { view: VIEW, alone: ALONE, stairs: { x: X0, w: W, top: 110, base: 700 } };
+export const SQUAT = {
+  view: { w: 1040, h: 420 },
+  alone: { x: 20, w: 1000, top: 56, bottom: 320 },
+  stairs: { x: 60, w: 920, top: 70, base: 360 },
+};
+
+/** Where a layout's sized bins sit in its panel: across, the top of their walls, and their floor. */
+export const spanOf = ({ alone }) => ({ x: alone.x, w: alone.w, top: alone.top + LABELS.above - 12, base: alone.bottom - UNLABELLED_FLOOR });
+export const ALONE_SPAN = spanOf(TALL);
 
 /** An area ({ x, w, top, bottom }) whose bins keep the full-size diagram's shape, centred across the panel. */
 function sizedArea(top, bottom = 744) {
@@ -853,9 +867,9 @@ function gradeHeader(final, complete) {
 
 /**
  * Options: `sandbox`, the filled diagram under its grade; `sized`, sized bins (stages from SIZED_STAGES);
- * `alone`, the sized diagram on its own with every bin kept, for the Understanding page.
+ * `alone`, the sized diagram on its own with every bin kept, for the Understanding page, laid out by `layout`.
  */
-function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind, final, complete }, { sandbox = false, sized = false, alone = false } = {}) {
+function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind, final, complete }, { sandbox = false, sized = false, alone = false, layout = TALL } = {}) {
   const bins = (at, area, opts) => sizedBins(sizedCats, final, at, area, complete, { ...opts, kind });
   if (sandbox) {
     const frame = merge(title(name), gradeHeader(final, complete), sized ? bins("fill", SANDBOX_SIZED, { keepEmpty: true, gradeLine: true }) : grade("fill", SANDBOX));
@@ -867,7 +881,7 @@ function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind,
     }));
     return { ...frame, ...SANDBOX_TIMING };
   }
-  if (sized && alone) return { ...merge(title(name), bins(stage, ALONE, { keepEmpty: true, labels: false })), ...SIZED_TIMING[stage] };
+  if (sized && alone) return { ...merge(title(name, layout.view), bins(stage, layout.alone, { keepEmpty: true, labels: false })), ...SIZED_TIMING[stage] };
   if (sized) return sizedDemo(stage, name, ex, bins, sizedCats, final);
   const L = stageIndex(stage);
   let body;
@@ -926,9 +940,10 @@ export function coFrame(course, stage, options = {}) {
  * keep their scores' keys, so the diagram's bars close up into the shape. `melted` levels every slice at the shape's
  * mean height: a rectangle with the same area.
  */
-function silhouette(cats, { melted = false } = {}) {
-  const { base, unit } = binSpace(ALONE, UNLABELLED_FLOOR);
-  const box = { x: ALONE.x, w: ALONE.w, top: base - SCORE_MAX * unit };
+function silhouette(cats, { melted = false, layout = TALL } = {}) {
+  const { alone } = layout;
+  const { base, unit } = binSpace(alone, UNLABELLED_FLOOR);
+  const box = { x: alone.x, w: alone.w, top: base - SCORE_MAX * unit };
   const scored = cats.filter((c) => c.scores.length);
   const total = sum(scored.map((c) => c.weight)) || 1;
   const slices = scored.flatMap((c) => c.scores.map((s) => ({ s, w: (box.w * c.weight) / total / c.scores.length })));
@@ -961,7 +976,7 @@ export const coSilhouette = (course, options) => silhouette(coModel(course).outc
  * scores' broken line, whose pieces add up to their share.
  * Blocks rise into place in timeline order, rather than growing out of whatever was shown before.
  */
-export function assessmentTypeTrajectory(course) {
+export function assessmentTypeTrajectory(course, { stairs, view } = TALL) {
   const result = assessmentTypeModel(course);
   const f = blank();
   const scored = result.types.filter((t) => t.scores.length);
@@ -970,15 +985,15 @@ export function assessmentTypeTrajectory(course) {
   const typeName = new Map(result.types.map((t) => [t.id, t.name]));
   const inClass = new Set(course.groups.find((g) => g.id === "in-class")?.types ?? []);
   const sessions = course.sessions.filter((session) => result.scores.some((s) => s.session === session.id));
-  const base = 700;
-  const full = base - 110; // the height of the whole grade so far
-  const width = W - 130; // leaves room on the right for the shares
+  const { x: x0, base } = stairs;
+  const full = base - stairs.top; // the height of the whole grade so far
+  const width = stairs.w - 130; // leaves room on the right for the shares
   const col = width / Math.max(1, sessions.length);
 
   let y = base;
   const spans = []; // each session's stretch of the grade: { type, top, bottom, order }
   sessions.forEach((session, i) => {
-    const x = X0 + i * col;
+    const x = x0 + i * col;
     const own = result.scores.filter((s) => s.session === session.id);
     const bottom = y;
     own.forEach((s) => {
@@ -995,11 +1010,11 @@ export function assessmentTypeTrajectory(course) {
       f.texts.push({ key: `stair-lbl-${session.id}`, x: x - 6, y: (y + bottom) / 2, text: typeName.get(type), size: 11, anchor: "end", cls: "label label--small", order: own[0].order });
     }
   });
-  f.lines.push({ key: "stair-floor", cls: "axis", x1: X0, y1: base, x2: X0 + width, y2: base });
-  f.texts.push({ key: "stair-time", x: X0 + width / 2, y: base + 28, text: "Time →", size: 14, anchor: "middle", cls: "label label--strong" });
+  f.lines.push({ key: "stair-floor", cls: "axis", x1: x0, y1: base, x2: x0 + width, y2: base });
+  f.texts.push({ key: "stair-time", x: x0 + width / 2, y: base + 28, text: "Time →", size: 14, anchor: "middle", cls: "label label--strong" });
 
   // The shares, on the right: one line for the assignments, and a broken line for the in-class scores beside it.
-  const assignmentLine = X0 + width + 22;
+  const assignmentLine = x0 + width + 22;
   const classLine = assignmentLine + 18;
   const labelX = classLine + 12;
   spans.forEach((span, i) => {
@@ -1016,5 +1031,5 @@ export function assessmentTypeTrajectory(course) {
   if (firstClass) {
     f.texts.push({ key: "share-lbl-class", x: labelX, y: (firstClass.top + firstClass.bottom) / 2, text: `${percent(classShare)} in class`, size: 12, anchor: "start", cls: "label label--small", order: firstClass.order });
   }
-  return { ...merge(title("Assessment Type Model"), f), ease: "smooth", duration: 900, stagger: 50 };
+  return { ...merge(title("Assessment Type Model", view), f), ease: "smooth", duration: 900, stagger: 50 };
 }

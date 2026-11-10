@@ -17,7 +17,15 @@ In this version both models are drawn as bins: each category is a bin as wide as
 **Heading:** What are Grading Models?
 
 **Step — floating scores:**
-> Grading Models are the framework used to measure each student's growth and competency in a course. In every class, students get grades for their assignments and contributions to class; the grading model is the structure that assembles those grades into a full picture.
+> Grading Models are the framework used to measure each student's growth and competency in a course. In every class, students get scores for their assignments and contributions to class; the grading model is the structure that assembles those scores into a full picture.
+
+The scores come from the 0 to 5 rubric. 
+0. No Evidence. The work is missing or was not attempted.
+1. Not Assessable. The work somewhat engages with the prompt requirements, but is largely incomplete. Below passable work.
+2. Review Needed. Passable but partial understanding of the learning outcome is demonstrated. 
+3. On Target. Understanding of the learning outcome is evident. Additional effort spent on revisions or expansions could improve the quality of the work.
+4. Excellent. Understanding of the learning outcome is evident through clear, well-justified work at an appropriate level of depth.
+5. Profound. Work uses the learning outcome in a productive and meaningful way that is relevant to the task and goes well beyond the stated and implied scope.
 
 **Step — floating scores:**
 > Not every score you receive is equally important, or equally reflective of your ability and understanding, so scores need to be organised to mirror the effort each student puts into each application and the course's goals for its students.

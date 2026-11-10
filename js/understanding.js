@@ -12,7 +12,7 @@
 import { createStore } from "./store.js";
 import { createChart } from "./chart.js";
 import { createWeightBar } from "./weights.js";
-import { VIEW, DIAGRAM_SPAN, ALONE_SPAN, assessmentTypeFrame, coFrame, assessmentTypeTrajectory, assessmentTypeSilhouette, coSilhouette } from "./scenes.js";
+import { VIEW, DIAGRAM_SPAN, ALONE_SPAN, TALL, SQUAT, spanOf, assessmentTypeFrame, coFrame, assessmentTypeTrajectory, assessmentTypeSilhouette, coSilhouette } from "./scenes.js";
 import { scatterFrame, groupFrame, rowFrame, networkFrame } from "./pool.js";
 import { assessmentTypeModel, coModel, format, percent } from "./grading.js";
 import { pastelFill } from "./palette.js";
@@ -22,6 +22,10 @@ const POOL_VIEW = { w: 640, h: 600 }; // narrow, leaving the text beside it room
 // The sized-scores page draws both models as bins of bars sized by score.
 const sized = document.body.dataset.variant === "sized";
 const SPAN = sized ? ALONE_SPAN : DIAGRAM_SPAN; // where the diagram's bins run across the panel
+// Trying out a much wider, shorter Assessment Type diagram: open the page with ?at=squat.
+const AT_LAYOUT = sized && new URLSearchParams(location.search).get("at") === "squat" ? SQUAT : TALL;
+const AT_VIEW = AT_LAYOUT.view;
+const AT_SPAN = sized ? spanOf(AT_LAYOUT) : DIAGRAM_SPAN;
 const PAUSE = 1600; // between frames of a sequence, unless a frame sets its own `hold`
 const NOTHING = { rects: [], paths: [], lines: [], tokens: [], texts: [] };
 const MIN_SHARE = 0.1; // no category can be dragged below this share of the grade
@@ -38,7 +42,7 @@ function categoryHeight(frame) {
 
 /** The circles in a row, in the order the bins (or cells) will be, at the height the diagram's categories sit. */
 // Sized on a fixed scale, so dragging one edge of the weight bar moves only the two circles beside it.
-const inRow = (groups, diagram) => rowFrame(groups, VIEW, { span: SPAN, y: categoryHeight(diagram) }, { labels: true, minShare: MIN_SHARE });
+const inRow = (groups, diagram, view = VIEW, span = SPAN) => rowFrame(groups, view, { span, y: categoryHeight(diagram) }, { labels: true, minShare: MIN_SHARE });
 
 /**
  * Ease the row of circles into the diagram: its bins appear behind the circles,
@@ -79,7 +83,8 @@ function withMultipliers(course, frame, only = () => true) {
 const coDiagram = (c) => coFrame(c, "fill", { fixedBins: true, sized, alone: true });
 /** The CO diagram with the scores counted once faded, and the multiplied ones labelled. */
 const multipliedFrame = (c) => ({ ...withMultipliers(c, multipliedOnly(c, coDiagram(c))), duration: 600, stagger: 0 });
-const atDiagram = (c) => assessmentTypeFrame(c, "fill", { sized, alone: true });
+const atDiagram = (c) => assessmentTypeFrame(c, "fill", { sized, alone: true, layout: AT_LAYOUT });
+const atTrajectory = (c) => assessmentTypeTrajectory(c, AT_LAYOUT);
 
 const early = (course) => ({ ...course, scores: earlySemester });
 
@@ -106,7 +111,7 @@ const untitled = (frame) => ({ ...frame, texts: frame.texts.filter((t) => t.key 
 function withStillToCome(course, frame) {
   const names = unfinished(course).map((t) => `${t.name} (${percent(t.weight)})`);
   if (!names.length) return frame;
-  return { ...frame, texts: [...frame.texts, { key: "still-to-come", x: VIEW.w / 2, y: 64, text: `Still to come: ${names.join(", ")}`, size: 13, anchor: "middle", cls: "label label--small" }] };
+  return { ...frame, texts: [...frame.texts, { key: "still-to-come", x: AT_VIEW.w / 2, y: 64, text: `Still to come: ${names.join(", ")}`, size: 13, anchor: "middle", cls: "label label--small" }] };
 }
 const sparse = (course) => ({ ...course, scores: sparseOutcome });
 
@@ -170,27 +175,28 @@ const STORIES = {
     },
   },
   at: {
-    view: VIEW,
+    view: AT_VIEW,
+    span: spanOf(AT_LAYOUT), // where the weight bars and the hover line up
     scenes: {
       photos: { show: "photo photo-right", frames: () => NOTHING },
       photo: { show: "photo", frames: () => NOTHING },
       // The circles are sized by their weights; from the next step on, the weight bars show to change them.
-      circles: { float: true, frames: (c) => groupFrame(byMedium(c), VIEW, { labels: true, weighted: true }) },
-      fixed: { show: "bar", float: true, frames: (c) => inRow(byMedium(c), atDiagram(c)) },
+      circles: { float: true, frames: (c) => groupFrame(byMedium(c), AT_VIEW, { labels: true, weighted: true }) },
+      fixed: { show: "bar", float: true, frames: (c) => inRow(byMedium(c), atDiagram(c), AT_VIEW, AT_SPAN) },
       diagram: {
         show: "bar",
-        frames: (c) => intoBins(inRow(byMedium(c), atDiagram(c)), atDiagram(c)),
-        silhouette: assessmentTypeSilhouette,
+        frames: (c) => intoBins(inRow(byMedium(c), atDiagram(c), AT_VIEW, AT_SPAN), atDiagram(c)),
+        silhouette: (c, options) => assessmentTypeSilhouette(c, { ...options, layout: AT_LAYOUT }),
       },
       unfold: { show: "bar", frames: (c) => calm(atDiagram(c)), unfold: (c) => semester(c, atDiagram) },
       // From here on the example is back at its default weights and can't be edited.
-      staircase: { reset: true, frames: (c) => assessmentTypeTrajectory(c) },
+      staircase: { reset: true, frames: atTrajectory },
       // Early in the semester: the assignments still to come are left out, so what there is has room;
       // beside the diagram, the same scores stacked, where the few in-class scores stand tall.
       early: {
         show: "grade pair",
         frames: (c) => withStillToCome(early(c), calm(atDiagram(scoredOnly(early(c))))),
-        pair: (c) => untitled(assessmentTypeTrajectory(early(c))),
+        pair: (c) => untitled(atTrajectory(early(c))),
         grade: (c) => assessmentTypeModel(early(c)).final,
       },
     },
@@ -223,7 +229,7 @@ const STORIES = {
   },
 };
 
-function createStory(section, { view, scenes }) {
+function createStory(section, { view, span = ALONE_SPAN, scenes }) {
   const figure = section.querySelector(".story__figure");
   const svg = figure.querySelector(".panel svg");
   const chart = createChart(svg, view);
@@ -295,15 +301,15 @@ function createStory(section, { view, scenes }) {
     const scale = Math.min(width / view.w, height / view.h);
     const fit = svg.getAttribute("preserveAspectRatio") ?? "";
     const share = (min, max) => (fit.includes(min) ? 0 : fit.includes(max) ? 1 : 0.5);
-    const left = (width - view.w * scale) * share("xMin", "xMax") + ALONE_SPAN.x * scale;
+    const left = (width - view.w * scale) * share("xMin", "xMax") + span.x * scale;
     const top = (height - view.h * scale) * share("YMin", "YMax");
     for (const el of [weights, note]) {
       if (!el) continue;
       el.style.left = `${left}px`;
-      el.style.width = `${ALONE_SPAN.w * scale}px`;
+      el.style.width = `${span.w * scale}px`;
     }
-    weights.style.top = `${top + ALONE_SPAN.base * scale}px`;
-    if (note) note.style.top = `${top + ALONE_SPAN.top * scale}px`;
+    weights.style.top = `${top + span.base * scale}px`;
+    if (note) note.style.top = `${top + span.top * scale}px`;
   }
   new ResizeObserver(align).observe(svg);
 
@@ -325,7 +331,7 @@ function createStory(section, { view, scenes }) {
   /** Whether the pointer is over the bins (in the diagram's own units). */
   function overBins(e) {
     const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
-    return p.x >= ALONE_SPAN.x && p.x <= ALONE_SPAN.x + ALONE_SPAN.w && p.y >= ALONE_SPAN.top && p.y <= ALONE_SPAN.base;
+    return p.x >= span.x && p.x <= span.x + span.w && p.y >= span.top && p.y <= span.base;
   }
 
   const canSilhouette = () => Boolean(note && scene && scenes[scene].silhouette);
@@ -362,4 +368,5 @@ function createStory(section, { view, scenes }) {
   enter(steps[0].dataset.scene);
 }
 
+document.querySelector('[data-story="at"]')?.classList.toggle("story--squat", AT_LAYOUT === SQUAT);
 document.querySelectorAll("[data-story]").forEach((section) => createStory(section, STORIES[section.dataset.story]));

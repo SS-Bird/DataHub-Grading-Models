@@ -1900,6 +1900,25 @@ button.score-key__item {
   background: linear-gradient(transparent 45vh, var(--color-panel) 45vh);
 }
 
+/* The squat Assessment Type diagram (?at=squat) takes the grade's column too; the grade sits in its top corner. */
+.story--squat .story__figure {
+  grid-template-columns: minmax(0, 1fr) 26rem;
+  grid-template-areas: "chart .";
+}
+
+/* Squat diagrams are wide enough to stack: the pair sits beneath the diagram. */
+.story--squat .story__figure[data-show~="pair"] {
+  grid-template-columns: minmax(0, 1fr) 26rem;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "chart ." "pair .";
+}
+
+.story--squat .story__grade {
+  grid-area: chart;
+  justify-self: end;
+  align-self: start;
+}
+
 /* Short, so the right-hand photo leaves soon after the section starts */
 .story--figure-left .step--spacer {
   min-height: 0;
