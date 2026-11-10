@@ -16,7 +16,8 @@ Then open http://localhost:8001
 
 | File | Responsibility |
 | --- | --- |
-| `index.html` | Understanding Grading Models (the landing page): scrolling stories for each model, drawn as bins |
+| `home.html` | Landing page, opened from the logo: the team photo |
+| `index.html` | Understanding Grading Models: scrolling stories for each model, drawn as bins |
 | `calculations.html` | Calculations with Grading Models: an editable example course, worked through as bins |
 | `try-it-yourself.html` | Try It Yourself: drag scores into both models and edit the class structure |
 | `course-models-by-college.html` | Course Models used by College: a stream graph of each college's courses per model |
