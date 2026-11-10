@@ -923,33 +923,34 @@ export function coFrame(course, stage, options = {}) {
  * A model's scores as one silhouette in a single box, for the Understanding page: the box is the diagram's whole area
  * (every score a 5), and each score a slice as wide as its share of the grade and as tall as its score, with no gaps
  * between bins, so the area the shape covers is the grade. `cats` are the bins ({ weight, scores }), in order; slices
- * keep their scores' keys, so the diagram's bars close up into the shape.
+ * keep their scores' keys, so the diagram's bars close up into the shape. `melted` levels every slice at the shape's
+ * mean height: a rectangle with the same area.
  */
-function silhouette(cats) {
+function silhouette(cats, { melted = false } = {}) {
   const { base, unit } = binSpace(ALONE, UNLABELLED_FLOOR);
   const box = { x: ALONE.x, w: ALONE.w, top: base - SCORE_MAX * unit };
   const scored = cats.filter((c) => c.scores.length);
   const total = sum(scored.map((c) => c.weight)) || 1;
+  const slices = scored.flatMap((c) => c.scores.map((s) => ({ s, w: (box.w * c.weight) / total / c.scores.length })));
+  // Melted, every slice levels out at the shape's mean height, so together they make one rectangle of the same area.
+  const level = sum(slices.map(({ s, w }) => s.score * w)) / box.w;
   const f = blank();
   let x = box.x;
-  scored.forEach((c) => {
-    const w = (box.w * c.weight) / total / c.scores.length;
-    c.scores.forEach((s) => {
-      const h = s.score * unit;
-      // A hair wider than its slice, so neighbours overlap and no seam shows between them.
-      f.tokens.push(token(s, x + w / 2, base - h / 2, w, { w: w + 0.6, h, round: false, rx: 0, text: "", cls: "token--silhouette" }));
-      x += w;
-    });
+  slices.forEach(({ s, w }) => {
+    const h = (melted ? level : s.score) * unit;
+    // A hair wider than its slice, so neighbours overlap and no seam shows between them.
+    f.tokens.push(token(s, x + w / 2, base - h / 2, w, { w: w + 0.6, h, round: false, rx: 0, text: "", cls: "token--silhouette" }));
+    x += w;
   });
   f.paths.push({ key: "silhouette-box", cls: "bin", d: `M${box.x},${box.top}H${box.x + box.w}V${base}H${box.x}Z` });
-  return { ...f, ease: "smooth", duration: 500, stagger: 0 };
+  return { ...f, ease: "smooth", duration: melted ? 1200 : 500, stagger: 0 };
 }
 
 /** The Assessment Type Model's silhouette: a bin for each assessment type. */
-export const assessmentTypeSilhouette = (course) => silhouette(assessmentTypeModel(course).types);
+export const assessmentTypeSilhouette = (course, options) => silhouette(assessmentTypeModel(course).types, options);
 
 /** The CO Model's silhouette: a bin for each CO, its (multiplied) scores in LO order, as in its diagram. */
-export const coSilhouette = (course) => silhouette(coModel(course).outcomes.map((co) => ({ weight: co.weight, scores: co.los.flatMap((lo) => lo.scores) })));
+export const coSilhouette = (course, options) => silhouette(coModel(course).outcomes.map((co) => ({ weight: co.weight, scores: co.los.flatMap((lo) => lo.scores) })), options);
 
 /**
  * The Assessment Type Model's trajectory: a staircase in timeline order, rising from bottom left to top right.

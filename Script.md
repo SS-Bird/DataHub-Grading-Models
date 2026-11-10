@@ -93,11 +93,11 @@ The two versions of each page (original and Sized Scores) share their text unles
 
 ---
 
-# Calculations for each Grading Model (`calculations-original.html`, `calculations.html`)
+# Calculations with Grading Models (`calculations-original.html`, `calculations.html`)
 
 ## Title page
 
-**Title (heading):** Calculations for each Grading Model
+**Title (heading):** Calculations with Grading Models
 
 **Subtitle / intro (optional):**
 >
@@ -111,10 +111,10 @@ The two versions of each page (original and Sized Scores) share their text unles
 
 ## An Example Course
 
-**Heading:** An Example Course
+**Heading:** Set the Example
 
 **Explanation:**
-> You can change the example here, or pick from a few preset examples. Add scores in order, and change the assignment and category weights.
+> Set the example here then continue scrolling to the explanation. You can also pick from a few preset examples. Add scores in order, and change the assignment and category weights.
 
 **Presets:** Typical Scores Mid-Semester · Typical Finished Class · Large Final Grade Difference Between Models
 **Side labels:** Assessment Type Weights · CO Weights · Weights (multipliers)

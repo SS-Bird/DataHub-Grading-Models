@@ -5,7 +5,7 @@
 // Several frames play one after another, each held for its `hold`; scrolling back up plays them in reverse.
 // `reset` puts the example back to its default weights first; `grade` gives the course grade to show beside the diagram.
 // `silhouette`: the frame shown while the diagram is hovered (or tapped): its scores as one shape in a box, with a note
-// on what the area means.
+// on what the area means; given `{ melted: true }`, the same area levelled into a rectangle.
 // `unfold`: the frames the step's "Watch a semester unfold" button plays.
 // The weight bars sit beneath the diagram, lined up with its bins so they name them.
 
@@ -25,6 +25,7 @@ const SPAN = sized ? ALONE_SPAN : DIAGRAM_SPAN; // where the diagram's bins run 
 const PAUSE = 1600; // between frames of a sequence, unless a frame sets its own `hold`
 const NOTHING = { rects: [], paths: [], lines: [], tokens: [], texts: [] };
 const MIN_SHARE = 0.1; // no category can be dragged below this share of the grade
+const MELT_HOLD = 500; // how long the silhouette keeps its shape before melting
 
 /** The diagram's own timing bounces scores into place; here they glide. */
 const calm = (frame) => ({ ...frame, ease: "smooth", duration: 1200, stagger: 10 });
@@ -183,8 +184,7 @@ const STORIES = {
       },
       unfold: { show: "bar", frames: (c) => calm(atDiagram(c)), unfold: (c) => semester(c, atDiagram) },
       // From here on the example is back at its default weights and can't be edited.
-      default: { reset: true, frames: (c) => calm(atDiagram(c)) },
-      staircase: { frames: (c) => assessmentTypeTrajectory(c) },
+      staircase: { reset: true, frames: (c) => assessmentTypeTrajectory(c) },
       // Early in the semester: the assignments still to come are left out, so what there is has room;
       // beside the diagram, the same scores stacked, where the few in-class scores stand tall.
       early: {
@@ -315,9 +315,11 @@ function createStory(section, { view, scenes }) {
     figure.classList.toggle("is-silhouette", on);
     if (note) note.hidden = !on;
     if (!redraw) return;
-    clearTimeout(timer);
     const course = store.get();
-    chart.render(on ? scenes[scene].silhouette(course) : { ...[].concat(scenes[scene].frames(course)).at(-1), duration: 500, stagger: 0 });
+    if (!on) return play([{ ...[].concat(scenes[scene].frames(course)).at(-1), duration: 500, stagger: 0 }]);
+    // The scores close up into one shape, hold it for half a second, then melt into a rectangle of the same area.
+    const shape = scenes[scene].silhouette(course);
+    play([{ ...shape, hold: shape.duration + MELT_HOLD }, scenes[scene].silhouette(course, { melted: true })]);
   }
 
   /** Whether the pointer is over the bins (in the diagram's own units). */
