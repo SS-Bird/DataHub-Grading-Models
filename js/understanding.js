@@ -22,8 +22,8 @@ const POOL_VIEW = { w: 640, h: 600 }; // narrow, leaving the text beside it room
 // The sized-scores page draws both models as bins of bars sized by score.
 const sized = document.body.dataset.variant === "sized";
 const SPAN = sized ? ALONE_SPAN : DIAGRAM_SPAN; // where the diagram's bins run across the panel
-// Trying out a much wider, shorter Assessment Type diagram: open the page with ?at=squat.
-const AT_LAYOUT = sized && new URLSearchParams(location.search).get("at") === "squat" ? SQUAT : TALL;
+// The Assessment Type diagram is much wider and shorter (squat); open the page with ?at=tall for the earlier shape.
+const AT_LAYOUT = sized && new URLSearchParams(location.search).get("at") !== "tall" ? SQUAT : TALL;
 const AT_VIEW = AT_LAYOUT.view;
 const AT_SPAN = sized ? spanOf(AT_LAYOUT) : DIAGRAM_SPAN;
 const PAUSE = 1600; // between frames of a sequence, unless a frame sets its own `hold`

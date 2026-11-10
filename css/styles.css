@@ -1909,7 +1909,7 @@ button.score-key__item {
   background: linear-gradient(transparent 45vh, var(--color-panel) 45vh);
 }
 
-/* The squat Assessment Type diagram (?at=squat) takes the grade's column too; the grade sits in its top corner. */
+/* The squat Assessment Type diagram (the default; ?at=tall for the earlier shape) takes the grade's column too; the grade sits in its top corner. */
 .story--squat .story__figure {
   grid-template-columns: minmax(0, 1fr) 26rem;
   grid-template-areas: "chart .";
