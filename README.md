@@ -16,8 +16,8 @@ Then open http://localhost:8001
 
 | File | Responsibility |
 | --- | --- |
-| `home.html` | About this Resource, opened from the logo: the team photo and credits |
-| `index.html` | Understanding Grading Models: scrolling stories for each model, drawn as bins |
+| `index.html` | About this Resource, the landing page (also opened from the logo): the team photo and credits |
+| `understanding.html` | Understanding Grading Models: scrolling stories for each model, drawn as bins |
 | `calculations.html` | Calculations with Grading Models: an editable example course, worked through as bins |
 | `try-it-yourself.html` | Try It Yourself: drag scores into both models and edit the class structure |
 | `course-models-by-college.html` | Model Use at Minerva: a stream graph of each college's courses per model |

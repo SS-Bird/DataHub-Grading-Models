@@ -3,23 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Understanding Grading Models</title>
-  <meta name="description" content="What grading models are, and how the Assessment Type Model and the CO Based Model organise your scores.">
+  <title>About this Resource</title>
+  <meta name="description" content="A DataHub project explaining Minerva's grading models: the Assessment Type Model and the CO Based Model.">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/styles.css">
-  <script type="module" src="js/understanding.js"></script>
 </head>
-<body data-variant="sized">
+<body>
 
   <header class="site-header">
     <nav aria-label="Site">
       <ul class="site-nav">
         <li class="site-nav__item">
-          <a href="index.html" aria-current="page">Understanding Grading Models <span aria-hidden="true">▾</span></a>
+          <a href="understanding.html">Understanding Grading Models <span aria-hidden="true">▾</span></a>
           <ul class="site-nav__menu">
-            <li><a href="index.html#what-are-grading-models">What are Grading Models?</a></li>
-            <li><a href="index.html#assessment-type-model">Assessment Type Model</a></li>
-            <li><a href="index.html#co-based-model">CO Based Model</a></li>
+            <li><a href="understanding.html#what-are-grading-models">What are Grading Models?</a></li>
+            <li><a href="understanding.html#assessment-type-model">Assessment Type Model</a></li>
+            <li><a href="understanding.html#co-based-model">CO Based Model</a></li>
           </ul>
         </li>
         <li class="site-nav__item">
@@ -40,156 +39,23 @@
         </li>
       </ul>
     </nav>
-    <a class="site-logo" href="home.html"><img src="images/logo.png" alt="Data Hub"></a>
+    <a class="site-logo" href="index.html" aria-current="page"><img src="images/logo.png" alt="Data Hub"></a>
   </header>
 
   <main>
     <section class="hero hero--short" aria-labelledby="page-title">
-      <h1 id="page-title">Understanding Grading Models</h1>
+      <h1 id="page-title">About this Resource</h1>
     </section>
 
-    <section class="story story--figure-right story--intro" data-story="intro" aria-label="Scores organised by a grading model">
-      <div class="story__steps">
-        <!-- What are Grading Models? -->
-        <article id="what-are-grading-models" class="step" data-scene="scatter">
-          <h2>What are Grading Models?</h2>
-          <p>Grading Models are the framework used to measure each student's growth and competency in a course. In every class, students get scores for their assignments and contributions to class; the grading model is the structure that assembles those scores into a full picture.</p>
-          <p>The scores come from the 0 to 5 rubric.</p>
-          <!-- Each item's marker is its score, drawn as a score token -->
-          <ol class="rubric" start="0">
-            <li class="rubric__item rubric__item--0"><span><strong>No Evidence.</strong> The work is missing or was not attempted.</span></li>
-            <li class="rubric__item rubric__item--1"><span><strong>Not Assessable.</strong> The work somewhat engages with the prompt requirements, but is largely incomplete. Below passable work.</span></li>
-            <li class="rubric__item rubric__item--2"><span><strong>Review Needed.</strong> Passable but partial understanding of the learning outcome is demonstrated.</span></li>
-            <li class="rubric__item rubric__item--3"><span><strong>On Target.</strong> Understanding of the learning outcome is evident. Additional effort spent on revisions or expansions could improve the quality of the work.</span></li>
-            <li class="rubric__item rubric__item--4"><span><strong>Excellent.</strong> Understanding of the learning outcome is evident through clear, well-justified work at an appropriate level of depth.</span></li>
-            <li class="rubric__item rubric__item--5"><span><strong>Profound.</strong> Work uses the learning outcome in a productive and meaningful way that is relevant to the task and goes well beyond the stated and implied scope.</span></li>
-          </ol>
-        </article>
-        <article class="step" data-scene="scatter">
-          <p>Not every score you receive is equally important, or equally reflective of your ability and understanding, so scores need to be organised to mirror the effort each student puts into each application and the course's goals for its students.</p>
-        </article>
-        <article class="step" data-scene="grouped">
-          <p>Grading Models apply <a class="hc" target="_blank" rel="noopener" href="https://my.minerva.edu/academics/hc-resources/hc-handbook/systemmapping/">#SystemMapping</a> to respond to the explanatory challenge: “What course content and skills has the student learnt?” The different models use different mappings to answer that question.</p>
-        </article>
-      </div>
-      <figure class="story__figure">
-        <div class="panel">
-          <svg role="img" aria-label="A pool of scores, gathered into groups as you scroll"></svg>
+    <section class="landing" aria-labelledby="team-heading">
+      <!-- The team photo goes in the figure, in place of its text -->
+      <figure class="landing__team">
+        <h2 id="team-heading">The Team</h2>
+        <div class="landing__photo">
+          <p>Team! We need to take a selfie!</p>
         </div>
       </figure>
-    </section>
-
-    <section class="prose prose--tight" aria-labelledby="which-heading">
-      <h2 id="which-heading">Do you know what Grading Model your class uses?</h2>
-      <p>If you navigate to <a class="hc" target="_blank" rel="noopener" href="https://forum.minerva.edu/app/outcome-index?tab=glos">Forum → Outcome Index → Courses → View Course Score Calculation</a>, you will see either:</p>
-    </section>
-
-    <!-- Assessment Type Model: the figure spans the story; the steps scroll over its right-hand side -->
-    <section class="story story--figure-left" data-story="at" aria-label="The Assessment Type Model">
-      <figure class="story__figure">
-        <div class="story__photos">
-          <img class="photo photo--left" src="images/forum-assessment-type-model.png" alt="Forum's Course Score Calculation for a course graded with the Assessment Type Model: assignments and in-class score categories, each with its share of the course score">
-          <img class="photo photo--right" src="images/forum-co-model.png" alt="Forum's Course Score Calculation for a course graded with the CO Based Model: LOs and HCs arranged within Course Outcomes">
-        </div>
-        <!-- The diagram, with its weights in bars lined up beneath its bins, naming them -->
-        <div class="panel">
-          <svg role="img" preserveAspectRatio="xMaxYMid meet" aria-label="Animated example of the Assessment Type Model"></svg>
-          <p class="story__note" hidden>The area covered represents the final grade. A theoretically (impossibly) perfect grade would completely fill the area, while all zeros will leave the area totally empty.</p>
-          <div class="story__weights">
-            <div class="weights__bar" data-list="withinGroups" role="group" aria-label="Weight of each assessment type, within In-Class and within Assignments"></div>
-            <div class="weights__bar" data-list="groups" role="group" aria-label="In-Class against Assignments weights"></div>
-          </div>
-        </div>
-        <!-- Beside the diagram for the last step: the same scores stacked in timeline order -->
-        <div class="panel story__pair">
-          <svg role="img" aria-label="The same scores stacked in timeline order"></svg>
-        </div>
-        <div class="story__grade">
-          <p class="side__title">Course grade to date</p>
-          <p class="story__grade-value"></p>
-        </div>
-      </figure>
-      <div class="story__steps">
-        <div class="step step--spacer" data-scene="photos" aria-hidden="true"></div>
-        <article id="assessment-type-model" class="step" data-scene="photo">
-          <h2>Assessment Type Model</h2>
-          <p>If your Forum looks like this photo on the left, with assignment and in-class score categories, you are being graded within the <strong>Assessment Type Model</strong>.</p>
-          <a class="skip" href="#co-based-model">Click here to skip to the CO Based Model <span aria-hidden="true">↓</span></a>
-        </article>
-        <article class="step" data-scene="circles">
-          <p>The Assessment Type Model divides the system according to each score's <a class="hc" target="_blank" rel="noopener" href="https://my.minerva.edu/academics/hc-resources/hc-handbook/medium/">#Medium</a>: for example, a poll, an essay (assignment), an interview (assignment), or class participation.</p>
-        </article>
-        <article class="step" data-scene="fixed">
-          <p>It prescribes a fixed importance to the <a class="hc" target="_blank" rel="noopener" href="https://my.minerva.edu/academics/hc-resources/hc-handbook/medium/">#Medium</a>.</p>
-        </article>
-        <article class="step" data-scene="diagram">
-          <p>Each assessment type, which is the unit of division for this system mapping, maps to one ‘bin’. All scores from that assessment type fill its bin.</p>
-          <p>Scores from important assessments, with wide bins, will have a larger impact on the grade.</p>
-        </article>
-        <article class="step" data-scene="unfold">
-          <p>The more scores in a bin, the less any individual score is worth.</p>
-          <p>The Assessment Type Model makes it easy for the student to see the importance of each assignment, because assignments have a set share of the final grade and that bin remains completely unchanged after receiving the assignment scores.</p>
-          <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
-        </article>
-        <article class="step" data-scene="staircase">
-          <p>The Assessment Type Model shows a clear, linear trajectory: assignments are almost always assigned an increasing share of the final grade over the course of the semester as expectations for the students' learning rise.</p>
-        </article>
-        <article class="step" data-scene="early">
-          <p>Sometimes students can be misled early in the semester when they've only received a couple of in-class scores, which account for most of the total grade. Even after the first assignment is returned, in-class scores are likely to account for most of the student's grade. Don't worry! Early in the semester, it's important to try your best and trust the process.</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- CO Based Model: mirrors the section above, with the figure on the right -->
-    <section class="story story--figure-right" data-story="co" aria-label="The CO Based Model">
-      <div class="story__steps">
-        <article id="co-based-model" class="step" data-scene="photo">
-          <h2>CO Based Model</h2>
-          <p>If your Forum looks like this photo on the right, with LOs and HCs arranged within Course Outcomes, you are being graded within the <strong>CO Based Model</strong>.</p>
-        </article>
-        <article class="step" data-scene="circles">
-          <p>The CO Based Model divides the system according to each score's <a class="hc" target="_blank" rel="noopener" href="https://my.minerva.edu/academics/hc-resources/hc-handbook/purpose/">#Purpose</a>. Scores are always associated with an HC or LO.</p>
-          <p>In the CO Based Model, we organise all HCs/LOs together according to their underlying purpose, the reason the course is teaching those concepts or skills.</p>
-        </article>
-        <article class="step" data-scene="fixed">
-          <p>It prescribes a fixed importance to each <a class="hc" target="_blank" rel="noopener" href="https://my.minerva.edu/academics/hc-resources/hc-handbook/purpose/">#Purpose</a>, but does not strictly define how much each assessment will impact your final grade.</p>
-        </article>
-        <article class="step" data-scene="diagram">
-          <p>In the CO Based Model, assignment scores contribute to each CO's “bin” just like in-class scores do.</p>
-        </article>
-        <article class="step" data-scene="multiplied">
-          <p>But assignments represent much more work and care from each student, so they should be more representative of a student's ability.</p>
-          <p>So assignments are given ‘weights’. The weight of an assignment “multiplies” each score from the assignment, or “adds the score to the bin” many times.</p>
-          <p>This is written as ‘2×’ to say “score added twice”.</p>
-        </article>
-        <article class="step" data-scene="unfold">
-          <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
-        </article>
-        <article class="step" data-scene="sparse">
-          <p>Sometimes grades can look weird when the student has received few scores within an important course outcome. If it's early in the semester, as always, try your best and trust the process, but within the CO Based Model the student can change this more directly by intentionally applying an LO from that CO in class to seek out more feedback and scores within that category.</p>
-        </article>
-        <article class="step" data-scene="visualise">
-          <p>Some students find the CO Based Model tricky to understand and predict, because the impact of the scores from early in the semester will be changed by the scores received after. Unlike in the Assessment Type Model, where a share of your final grade is completely fixed after you submit an assignment, you never “finish” contributing to any category within the CO system map. Although that might make it tricky to understand, it gives students the power to “pick” how impactful they want their assignment to be by tagging more HCs/LOs.</p>
-        </article>
-      </div>
-      <figure class="story__figure">
-        <div class="panel">
-          <svg role="img" preserveAspectRatio="xMaxYMid meet" aria-label="Animated example of the CO Based Model"></svg>
-          <p class="story__note" hidden>The area covered represents the final grade. A theoretically (impossibly) perfect grade would completely fill the area, while all zeros will leave the area totally empty.</p>
-          <div class="story__weights">
-            <!-- Read only: each LO's share follows from how many of its CO's scores it has -->
-            <div class="weights__bar weights__bar--fixed" data-list="los" role="group" tabindex="0" aria-label="Each LO's share of the grade" aria-describedby="lo-share-note"></div>
-            <div class="weights__bar" data-list="outcomes" role="group" aria-label="CO Based Model weights"></div>
-            <p id="lo-share-note" class="weights__note">The share that each LO is worth is not pre-assigned; the share of the grade coming from each LO is a consequence of how many times it's applied.</p>
-          </div>
-        </div>
-        <div class="story__grade">
-          <p class="side__title">Course grade to date</p>
-          <p class="story__grade-value"></p>
-        </div>
-        <img class="story__photo" src="images/forum-co-model.png" alt="Forum's Course Score Calculation for a course graded with the CO Based Model: LOs and HCs arranged within Course Outcomes">
-        <p class="story__placeholder placeholder">How to visualise this?</p>
-      </figure>
+      <p class="landing__credit">This is a DataHub project, created by Sophie Bird M27 and directed by Dean Ribeiro and Gisele Fretta Barros M26.</p>
     </section>
   </main>
 

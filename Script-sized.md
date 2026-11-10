@@ -6,7 +6,7 @@ In this version both models are drawn as bins: each category is a bin as wide as
 
 ---
 
-# Understanding Grading Models — Sized Scores (`index.html`)
+# Understanding Grading Models — Sized Scores (`understanding.html`)
 
 ## Title page
 
@@ -236,7 +236,7 @@ For each step:
 
 ---
 
-# About this Resource (`home.html`, opened from the logo)
+# About this Resource (`index.html`: the landing page, also opened from the logo)
 
 **Title (heading):** About this Resource
 **Photo heading:** The Team

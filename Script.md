@@ -6,7 +6,7 @@ The two versions of each page (original and Sized Scores) share their text unles
 
 ---
 
-# Understanding Grading Models (`understanding-original.html`, `index.html`)
+# Understanding Grading Models (`understanding-original.html`, `understanding.html`)
 
 ## Title page
 
@@ -244,7 +244,7 @@ The two versions of each page (original and Sized Scores) share their text unles
 
 ---
 
-# About this Resource (`home.html`, opened from the logo)
+# About this Resource (`index.html`: the landing page, also opened from the logo)
 
 **Title (heading):** About this Resource
 **Photo heading:** The Team
