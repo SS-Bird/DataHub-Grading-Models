@@ -244,6 +244,11 @@ The two versions of each page (original and Sized Scores) share their text unles
 
 ---
 
-# Footer (every page)
+# About this Resource (`home.html`, opened from the logo)
 
+**Title (heading):** About this Resource
+**Photo heading:** The Team
+**Photo placeholder:** Team! We need to take a selfie!
+
+**Beside the photo:**
 > This is a DataHub project, created by Sophie Bird M27 and directed by Dean Ribeiro and Gisele Fretta Barros M26.

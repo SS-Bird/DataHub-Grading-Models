@@ -220,9 +220,9 @@ For each step:
 
 ---
 
-# Course Models Used by College (`course-models-by-college.html`)
+# Model Use at Minerva (`course-models-by-college.html`)
 
-**Title (heading):** Course Models Used by College
+**Title (heading):** Model Use at Minerva
 
 **Heading:** Courses graded with each model, by college
 
@@ -236,6 +236,11 @@ For each step:
 
 ---
 
-# Footer (every page)
+# About this Resource (`home.html`, opened from the logo)
 
+**Title (heading):** About this Resource
+**Photo heading:** The Team
+**Photo placeholder:** Team! We need to take a selfie!
+
+**Beside the photo:**
 > This is a DataHub project, created by Sophie Bird M27 and directed by Dean Ribeiro and Gisele Fretta Barros M26.

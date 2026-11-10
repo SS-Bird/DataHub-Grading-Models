@@ -1,4 +1,4 @@
-// Entry point for the Course Models Used by College page: a stream graph of how many courses each college graded
+// Entry point for the Model Use at Minerva page: a stream graph of how many courses each college graded
 // with each model, semester by semester. Assessment Type courses stack up above the line, CO courses down below it,
 // one band per college, largest colleges nearest the line. Recreated from a peer's chart, with its numbers below.
 // A college keeps its college colour on both sides; bands are named directly where they have room, hovering a semester

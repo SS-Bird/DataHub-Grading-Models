@@ -16,11 +16,11 @@ Then open http://localhost:8001
 
 | File | Responsibility |
 | --- | --- |
-| `home.html` | Landing page, opened from the logo: the team photo |
+| `home.html` | About this Resource, opened from the logo: the team photo and credits |
 | `index.html` | Understanding Grading Models: scrolling stories for each model, drawn as bins |
 | `calculations.html` | Calculations with Grading Models: an editable example course, worked through as bins |
 | `try-it-yourself.html` | Try It Yourself: drag scores into both models and edit the class structure |
-| `course-models-by-college.html` | Course Models used by College: a stream graph of each college's courses per model |
+| `course-models-by-college.html` | Model Use at Minerva: a stream graph of each college's courses per model |
 | `understanding-original.html`, `calculations-original.html` | Earlier versions of the first two pages (areas instead of bins), under "Old versions" |
 | `css/styles.css` | All styling, including brand tokens and chart colours |
 | `js/data.js` | The example courses and presets |
@@ -36,7 +36,7 @@ Then open http://localhost:8001
 | `js/main.js` | Calculations pages: wires scroll steps, charts and controls to the store |
 | `js/understanding.js` | Understanding pages: which scene each scroll step shows |
 | `js/try.js` | Try It Yourself page |
-| `js/colleges.js` | Course Models used by College: the stream graph, its data and table |
+| `js/colleges.js` | Model Use at Minerva: the stream graph, its data and table |
 
 To change the default example, edit `js/data.js` (the Understanding page uses `explainer` there); equations and results update automatically.
 To add a step to the Calculations page, add an `<article class="step">` in `calculations.html` and a frame in `js/scenes.js`.
