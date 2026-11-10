@@ -1619,6 +1619,15 @@ button {
   stroke-dasharray: 8 5;
 }
 
+/* The grade lines (1 to 4) across the hovered area; 0 and 5 are its floor and top */
+.grade-mark {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1;
+  stroke-opacity: 0.35;
+  stroke-dasharray: 3 4;
+}
+
 /* Key of assessments and LOs: hovering one lights up its scores in the diagrams */
 .score-key {
   align-self: center;

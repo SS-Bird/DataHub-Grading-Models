@@ -938,7 +938,7 @@ export function coFrame(course, stage, options = {}) {
  * (every score a 5), and each score a slice as wide as its share of the grade and as tall as its score, with no gaps
  * between bins, so the area the shape covers is the grade. `cats` are the bins ({ weight, scores }), in order; slices
  * keep their scores' keys, so the diagram's bars close up into the shape. `melted` levels every slice at the shape's
- * mean height: a rectangle with the same area.
+ * mean height: a rectangle with the same area. Faint lines mark each grade, 0 to 5, numbered on the left.
  */
 function silhouette(cats, { melted = false, layout = TALL } = {}) {
   const { alone } = layout;
@@ -958,6 +958,12 @@ function silhouette(cats, { melted = false, layout = TALL } = {}) {
     x += w;
   });
   f.paths.push({ key: "silhouette-box", cls: "bin", d: `M${box.x},${box.top}H${box.x + box.w}V${base}H${box.x}Z` });
+  // The grade lines, 0 to 5: faint lines over the shape, numbered just left of the box.
+  for (let k = 0; k <= SCORE_MAX; k++) {
+    const y = base - k * unit;
+    if (k > 0 && k < SCORE_MAX) f.outlines.push({ key: `grade-mark-${k}`, cls: "grade-mark", d: `M${box.x},${y}H${box.x + box.w}` });
+    f.texts.push({ key: `grade-mark-lbl-${k}`, x: box.x - 6, y, text: String(k), size: 12, anchor: "end", cls: "label label--small" });
+  }
   return { ...f, ease: "smooth", duration: melted ? 1200 : 500, stagger: 0 };
 }
 
