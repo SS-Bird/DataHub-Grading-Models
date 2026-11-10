@@ -22,10 +22,10 @@ const POOL_VIEW = { w: 640, h: 600 }; // narrow, leaving the text beside it room
 // The sized-scores page draws both models as bins of bars sized by score.
 const sized = document.body.dataset.variant === "sized";
 const SPAN = sized ? ALONE_SPAN : DIAGRAM_SPAN; // where the diagram's bins run across the panel
-// The Assessment Type diagram is much wider and shorter (squat); open the page with ?at=tall for the earlier shape.
-const AT_LAYOUT = sized && new URLSearchParams(location.search).get("at") !== "tall" ? SQUAT : TALL;
-const AT_VIEW = AT_LAYOUT.view;
-const AT_SPAN = sized ? spanOf(AT_LAYOUT) : DIAGRAM_SPAN;
+// The CO diagram is much wider and shorter (squat) on the sized page.
+const CO_LAYOUT = sized ? SQUAT : TALL;
+const CO_VIEW = CO_LAYOUT.view;
+const CO_SPAN = sized ? spanOf(CO_LAYOUT) : DIAGRAM_SPAN;
 const PAUSE = 1600; // between frames of a sequence, unless a frame sets its own `hold`
 const NOTHING = { rects: [], paths: [], lines: [], tokens: [], texts: [] };
 const MIN_SHARE = 0.1; // no category can be dragged below this share of the grade
@@ -80,11 +80,10 @@ function withMultipliers(course, frame, only = () => true) {
   return { ...frame, texts: [...frame.texts, ...badges] };
 }
 
-const coDiagram = (c) => coFrame(c, "fill", { fixedBins: true, sized, alone: true });
+const coDiagram = (c) => coFrame(c, "fill", { fixedBins: true, sized, alone: true, layout: CO_LAYOUT });
 /** The CO diagram with the scores counted once faded, and the multiplied ones labelled. */
 const multipliedFrame = (c) => ({ ...withMultipliers(c, multipliedOnly(c, coDiagram(c))), duration: 600, stagger: 0 });
-const atDiagram = (c) => assessmentTypeFrame(c, "fill", { sized, alone: true, layout: AT_LAYOUT });
-const atTrajectory = (c) => assessmentTypeTrajectory(c, AT_LAYOUT);
+const atDiagram = (c) => assessmentTypeFrame(c, "fill", { sized, alone: true });
 
 const early = (course) => ({ ...course, scores: earlySemester });
 
@@ -111,7 +110,7 @@ const untitled = (frame) => ({ ...frame, texts: frame.texts.filter((t) => t.key 
 function withStillToCome(course, frame) {
   const names = unfinished(course).map((t) => `${t.name} (${percent(t.weight)})`);
   if (!names.length) return frame;
-  return { ...frame, texts: [...frame.texts, { key: "still-to-come", x: AT_VIEW.w / 2, y: 64, text: `Still to come: ${names.join(", ")}`, size: 13, anchor: "middle", cls: "label label--small" }] };
+  return { ...frame, texts: [...frame.texts, { key: "still-to-come", x: VIEW.w / 2, y: 64, text: `Still to come: ${names.join(", ")}`, size: 13, anchor: "middle", cls: "label label--small" }] };
 }
 const sparse = (course) => ({ ...course, scores: sparseOutcome });
 
@@ -175,46 +174,46 @@ const STORIES = {
     },
   },
   at: {
-    view: AT_VIEW,
-    span: spanOf(AT_LAYOUT), // where the weight bars and the hover line up
+    view: VIEW,
     scenes: {
       photos: { show: "photo photo-right", frames: () => NOTHING },
       photo: { show: "photo", frames: () => NOTHING },
       // The circles are sized by their weights; from the next step on, the weight bars show to change them.
-      circles: { float: true, frames: (c) => groupFrame(byMedium(c), AT_VIEW, { labels: true, weighted: true }) },
-      fixed: { show: "bar", float: true, frames: (c) => inRow(byMedium(c), atDiagram(c), AT_VIEW, AT_SPAN) },
+      circles: { float: true, frames: (c) => groupFrame(byMedium(c), VIEW, { labels: true, weighted: true }) },
+      fixed: { show: "bar", float: true, frames: (c) => inRow(byMedium(c), atDiagram(c)) },
       diagram: {
         show: "bar",
-        frames: (c) => intoBins(inRow(byMedium(c), atDiagram(c), AT_VIEW, AT_SPAN), atDiagram(c)),
-        silhouette: (c, options) => assessmentTypeSilhouette(c, { ...options, layout: AT_LAYOUT }),
+        frames: (c) => intoBins(inRow(byMedium(c), atDiagram(c)), atDiagram(c)),
+        silhouette: assessmentTypeSilhouette,
       },
       unfold: { show: "bar", frames: (c) => calm(atDiagram(c)), unfold: (c) => semester(c, atDiagram) },
       // From here on the example is back at its default weights and can't be edited.
-      staircase: { reset: true, frames: atTrajectory },
+      staircase: { reset: true, frames: (c) => assessmentTypeTrajectory(c) },
       // Early in the semester: the assignments still to come are left out, so what there is has room;
       // beside the diagram, the same scores stacked, where the few in-class scores stand tall.
       early: {
         show: "grade pair",
         frames: (c) => withStillToCome(early(c), calm(atDiagram(scoredOnly(early(c))))),
-        pair: (c) => untitled(atTrajectory(early(c))),
+        pair: (c) => untitled(assessmentTypeTrajectory(early(c))),
         grade: (c) => assessmentTypeModel(early(c)).final,
       },
     },
   },
   co: {
-    view: VIEW,
+    view: CO_VIEW,
+    span: spanOf(CO_LAYOUT), // where the weight bars and the hover line up
     scenes: {
       photo: { show: "photo", frames: () => NOTHING },
       // From the assessments' circles to the COs', where each score is joined to its LO, like a network.
       circles: {
         float: true,
-        frames: (c) => [groupFrame(byMedium(c), VIEW, { labels: true, weighted: true }), networkFrame(byPurpose(c), VIEW)],
+        frames: (c) => [groupFrame(byMedium(c), CO_VIEW, { labels: true, weighted: true }), networkFrame(byPurpose(c), CO_VIEW)],
       },
-      fixed: { show: "bar", float: true, frames: (c) => inRow(byPurpose(c), coDiagram(c)) },
+      fixed: { show: "bar", float: true, frames: (c) => inRow(byPurpose(c), coDiagram(c), CO_VIEW, CO_SPAN) },
       diagram: {
         show: "bar",
-        frames: (c) => intoBins(inRow(byPurpose(c), coDiagram(c)), coDiagram(c)),
-        silhouette: coSilhouette,
+        frames: (c) => intoBins(inRow(byPurpose(c), coDiagram(c), CO_VIEW, CO_SPAN), coDiagram(c)),
+        silhouette: (c, options) => coSilhouette(c, { ...options, layout: CO_LAYOUT }),
       },
       multiplied: { show: "bar", frames: (c) => multipliedFrame(c) },
       // Back to the plain diagram; the button plays the semester, ending there too.
@@ -368,5 +367,5 @@ function createStory(section, { view, span = ALONE_SPAN, scenes }) {
   enter(steps[0].dataset.scene);
 }
 
-document.querySelector('[data-story="at"]')?.classList.toggle("story--squat", AT_LAYOUT === SQUAT);
+document.querySelector('[data-story="co"]')?.classList.toggle("story--squat", CO_LAYOUT === SQUAT);
 document.querySelectorAll("[data-story]").forEach((section) => createStory(section, STORIES[section.dataset.story]));

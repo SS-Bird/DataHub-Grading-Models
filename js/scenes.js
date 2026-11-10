@@ -547,7 +547,7 @@ const ALONE = { x: 20, w: 600, top: 64, bottom: 664 };
 /**
  * How the Understanding page lays out a diagram on its own: the panel's viewBox (`view`), where the bins sit (`alone`),
  * and where the trajectory staircase sits (`stairs`: its left, width, top of the whole grade, and floor).
- * TALL is the usual panel; SQUAT is a much wider, shorter one (tried for the Assessment Type Model).
+ * TALL is the usual panel; SQUAT is a much wider, shorter one (used for the CO Model).
  */
 export const TALL = { view: VIEW, alone: ALONE, stairs: { x: X0, w: W, top: 110, base: 700 } };
 export const SQUAT = {
