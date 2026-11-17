@@ -649,10 +649,9 @@ const levelBox = (inner, base, unit, value) => ({ x: inner.x, y: base - value * 
  *   keepEmpty: keep bins without scores (no cutting); multipliers: label scores counted more than once;
  *   gradeLine: a line across the bins at the height of the grade to date;
  *   labels: false leaves the bins and their LOs unnamed, and puts their floor on the bottom of the area;
- *   running: each bin's average so far, as a line across it at that height and a number above it;
- *   fillBins: melted scores fill their bin from wall to wall.
+ *   running: each bin's average so far, as a line across it at that height and a number above it.
  */
-function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind, multipliers = false, gradeLine = false, labels = true, running = false, fillBins = false }) {
+function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind, multipliers = false, gradeLine = false, labels = true, running = false }) {
   const L = sizedIndex(stage);
   const f = blank();
   if (L < sizedIndex("frame")) return f;
@@ -708,9 +707,8 @@ function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind
     }
 
     if (L >= sizedIndex("melt") && c.average !== null) {
-      const pool = fillBins ? box : inner;
-      f.rects.push(...water(slots(scoresOf(c), pool), base, unit, c.average));
-      f.texts.push(placedAverage(`avg-${c.id}`, c.average, levelBox(pool, base, unit, c.average), c.weight, "", "on-dark"));
+      f.rects.push(...water(slots(scoresOf(c), inner), base, unit, c.average));
+      f.texts.push(placedAverage(`avg-${c.id}`, c.average, levelBox(inner, base, unit, c.average), c.weight, "", "on-dark"));
     }
 
     if (running && L === sizedIndex("fill") && c.average !== null) {
@@ -878,7 +876,7 @@ function gradeHeader(final, complete) {
  * Options: `sandbox`, the filled diagram under its grade; `sized`, sized bins (stages from SIZED_STAGES);
  * `alone`, the sized diagram on its own with every bin kept, for the Understanding page, laid out by `layout`.
  */
-function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind, final, complete }, { sandbox = false, sized = false, alone = false, layout = TALL, running = false, fillBins = false } = {}) {
+function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind, final, complete }, { sandbox = false, sized = false, alone = false, layout = TALL, running = false } = {}) {
   const bins = (at, area, opts) => sizedBins(sizedCats, final, at, area, complete, { ...opts, kind });
   if (sandbox) {
     const frame = merge(title(name), gradeHeader(final, complete), sized ? bins("fill", SANDBOX_SIZED, { keepEmpty: true, gradeLine: true }) : grade("fill", SANDBOX));
@@ -890,7 +888,7 @@ function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind,
     }));
     return { ...frame, ...SANDBOX_TIMING };
   }
-  if (sized && alone) return { ...merge(title(name, layout.view), bins(stage, layout.alone, { keepEmpty: true, labels: false, running, fillBins })), ...SIZED_TIMING[stage] };
+  if (sized && alone) return { ...merge(title(name, layout.view), bins(stage, layout.alone, { keepEmpty: true, labels: false, running })), ...SIZED_TIMING[stage] };
   if (sized) return sizedDemo(stage, name, ex, bins, sizedCats, final);
   const L = stageIndex(stage);
   let body;

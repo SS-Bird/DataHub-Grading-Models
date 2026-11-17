@@ -1,12 +1,14 @@
 // Entry point for the Temp: Diagram Options page: each option draws the Assessment Type Model and the CO Model side by
 // side (variants in js/variants.js), from one example course per option. Each option's buttons play both diagrams at
 // once: the average within each category, the average overall, or a semester unfolding (with the grade so far).
-// Weights are changed with a bar beneath the diagram, or, for the pies, by dragging the handles on the ring.
+// Weights are changed with a bar beneath the diagram, or, for the pie, by dragging the handles on the ring.
+// Options that offer it can colour scores by rubric score or by origin (an LO, or an assessment type), with a key
+// that picks out an origin's scores when pointed at; some can also be drawn light (dark on light) instead of dark.
 
 import { createStore } from "./store.js";
 import { createChart } from "./chart.js";
 import { createWeightBar } from "./weights.js";
-import { VARIANTS, VARIANT_VIEW, PIE, categoriesOf, pieAngles } from "./variants.js";
+import { VARIANTS, VARIANT_VIEW, PIE, categoriesOf, originsOf, pieAngles } from "./variants.js";
 import { assessmentTypeModel, coModel, format } from "./grading.js";
 import { pastelFill } from "./palette.js";
 import { explainerPresets } from "./data.js";
@@ -30,18 +32,43 @@ function semester(course) {
   });
 }
 
-/** The frames each button plays, for one model's diagram. */
-function sequence(variant, model, course, action) {
-  const filled = { ...variant.fill(model, course), duration: 500, stagger: 0, hold: 300 };
+/** The course with one assessment type's scores counted only once. */
+const countedOnce = (course, typeId) => ({
+  ...course, assessmentTypes: course.assessmentTypes.map((t) => (t.id === typeId ? { ...t, multiplier: 1 } : t)),
+});
+
+/**
+ * The semester from its start, with the grade so far. In the CO model, a multiplied assignment's scores first arrive
+ * counted once, at the usual size, then grow to their weight while a badge ("4×") says how many times they count.
+ */
+function unfold(variant, model, course, options) {
+  const frame = (c, extra = {}, timing = {}) => ({
+    ...variant.fill(model, c, { ...options, running: true, full: course, ...extra }),
+    ease: "smooth", duration: 450, stagger: 0, hold: 650, grade: MODELS[model](c).final, ...timing,
+  });
+  return semester(course).flatMap((c, i) => {
+    const session = course.sessions[i - 1]; // the session this step adds (none for the empty start)
+    const type = session && course.assessmentTypes.find((t) => t.id === session.type);
+    if (model !== "co" || !(type?.multiplier > 1)) return [frame(c)];
+    const ids = new Set(c.scores.filter((s) => s.session === session.id).map((s) => s.id));
+    return [
+      frame(countedOnce(c, type.id), {}, { hold: 700 }),
+      frame(c, { grow: { ids, times: type.multiplier } }, { duration: 900, hold: 1300 }),
+      frame(c), // the badges go
+    ];
+  });
+}
+
+/** The frames each button plays, for one model's diagram; `options` are passed to the variant (its colouring). */
+function sequence(variant, model, course, action, options) {
+  const filled = { ...variant.fill(model, course, options), duration: 500, stagger: 0, hold: 300 };
   const grade = MODELS[model](course).final;
-  const within = { ...variant.within(model, course), duration: 1400, stagger: 0, grade };
+  const within = { ...variant.within(model, course, options), duration: 1400, stagger: 0, grade };
   switch (action) {
     case "within": return [filled, within];
-    case "overall": return [filled, { ...within, hold: 2000 }, ...variant.overall(model, course).map((f) => ({ duration: 1200, stagger: 0, ...f, grade }))];
-    case "unfold": return semester(course).map((c) => ({
-      ...variant.fill(model, c, { running: true, full: course }), ease: "smooth", duration: 450, stagger: 0, hold: 650, grade: MODELS[model](c).final,
-    }));
-    default: return [{ ...variant.fill(model, course), duration: 600, stagger: 0 }];
+    case "overall": return [filled, { ...within, hold: 2000 }, ...variant.overall(model, course, options).map((f) => ({ duration: 1200, stagger: 0, ...f, grade }))];
+    case "unfold": return unfold(variant, model, course, options);
+    default: return [{ ...variant.fill(model, course, options), duration: 600, stagger: 0 }];
   }
 }
 
@@ -113,8 +140,38 @@ function createOption(section) {
     let bar = null;
     if (variant.control.type === "ring") ringControl(svg, store, model);
     else bar = barControl(side.querySelector(".option__chart"), store, model, variant.control);
-    return { model, chart, grade, bar };
+    // A key to the origin colours, beneath the grade, shown while scores are coloured by origin.
+    // Pointing at (or focusing) an origin picks out its scores in the diagram.
+    let legend = null;
+    if (variant.colourings) {
+      legend = document.createElement("ul");
+      legend.className = "option__legend";
+      legend.setAttribute("aria-label", model === "at" ? "Colour of each LO" : "Colour of each assessment type");
+      legend.innerHTML = originsOf(model, store.get()).map((o, i) => `
+        <li tabindex="0" data-origin="${i}"><span class="option__swatch" style="background: var(--origin-${model}-${i})"></span>${o.name}</li>`).join("");
+      const pick = (e) => {
+        const item = e.target.closest("[data-origin]");
+        if (item) side.dataset.highlight = item.dataset.origin;
+      };
+      const unpick = () => delete side.dataset.highlight;
+      legend.addEventListener("pointerover", pick);
+      legend.addEventListener("focusin", pick);
+      legend.addEventListener("pointerleave", unpick);
+      legend.addEventListener("focusout", unpick);
+      side.querySelector(".option__grade").append(legend);
+    }
+    return { model, chart, grade, bar, legend };
   });
+
+  // Each switch above the diagrams (colouring: rubric or origin; theme: dark or light) sets one option for both.
+  const settings = { colouring: "rubric", theme: "dark" };
+  function set(name, value) {
+    settings[name] = value;
+    section.querySelectorAll(`[data-setting="${name}"] [data-value]`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === value)));
+    section.classList.toggle("option--light", settings.theme === "light");
+    sides.forEach((side) => side.legend?.toggleAttribute("hidden", settings.colouring !== "origin"));
+  }
+  Object.entries(settings).forEach(([name, value]) => set(name, value));
 
   function showGrade(side, value) {
     side.grade.textContent = format(value ?? null);
@@ -129,7 +186,7 @@ function createOption(section) {
     const course = store.get();
     sides.forEach((side) => {
       side.bar?.render();
-      const frames = sequence(variant, side.model, course, next);
+      const frames = sequence(variant, side.model, course, next, settings);
       const step = (i) => {
         const frame = frames[i];
         side.chart.render(frame);
@@ -145,6 +202,12 @@ function createOption(section) {
   section.addEventListener("click", (e) => {
     const button = e.target.closest("[data-action]");
     if (button) play(button.dataset.action);
+    // A new setting shows the scores in it.
+    const choice = e.target.closest("[data-setting] [data-value]");
+    if (choice) {
+      set(choice.closest("[data-setting]").dataset.setting, choice.dataset.value);
+      play("fill");
+    }
   });
   play("fill");
 }

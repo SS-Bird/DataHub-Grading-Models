@@ -2650,21 +2650,161 @@ img.story__photo {
 .stack-box { fill: none; stroke: var(--color-ink); stroke-width: 2; }
 .stack-box--whole { stroke-width: 3; }
 .slice { stroke: var(--mu-white); stroke-width: 1; stroke-linejoin: round; }
-.slice--melted { stroke: none; }
-.pie-divide { stroke: var(--color-ink); stroke-width: 3.5; stroke-linecap: round; }
-.slice-bg { fill: var(--color-box); }
-.rose-rim { fill: none; stroke: var(--color-ink); stroke-width: 2; }
-.ring { stroke: var(--mu-white); stroke-width: 1.5; }
+.slice--melted { stroke: none; }.slice-bg { fill: var(--color-box); fill-opacity: 0.5; }
+.rose-rim { fill: none; stroke: var(--color-muted); stroke-width: 1; stroke-opacity: 0.5; }
+.ring { stroke: var(--color-bg); stroke-width: 1.5; fill-opacity: 0.45; }
 .ring--0 { fill: var(--mu-light-grey); }
 .ring--1 { fill: var(--mu-grey); }
 .ring-handle {
   fill: var(--mu-white);
-  stroke: var(--color-ink);
-  stroke-width: 2;
+  stroke: var(--color-muted);
+  stroke-width: 1.5;
   cursor: grab;
   transition: fill 150ms;
 }
 .ring-handle:hover { fill: var(--color-accent); }
+
+/* Origin colouring: where a score came from. Each model has its own clearly distinct set, because the colours
+   stand for different things: LOs in the Assessment Type Model, assessment types in the CO Model.
+   All are light enough to read on the dark bins, and strong enough to read on white. */
+:root {
+  /* Assessment Type Model: LOs */
+  --origin-at-0: #5fa8f0; /* blue */
+  --origin-at-1: #ffa64d; /* orange */
+  --origin-at-2: #5fd08a; /* green */
+  --origin-at-3: #f07ad8; /* pink */
+  --origin-at-4: #d9b47a; /* sand */
+  --origin-at-5: #8fe3f0; /* sky */
+
+  /* CO Model: assessment types */
+  --origin-co-0: #b8ec6c; /* lime */
+  --origin-co-1: #3fd9cc; /* teal */
+  --origin-co-2: #ffd84a; /* yellow */
+  --origin-co-3: #ff7f78; /* coral */
+  --origin-co-4: #b69cff; /* lavender */
+  --origin-co-5: #d0d0d0; /* grey */
+}
+
+.origin-at--0 { fill: var(--origin-at-0); }
+.origin-at--1 { fill: var(--origin-at-1); }
+.origin-at--2 { fill: var(--origin-at-2); }
+.origin-at--3 { fill: var(--origin-at-3); }
+.origin-at--4 { fill: var(--origin-at-4); }
+.origin-at--5 { fill: var(--origin-at-5); }
+.origin-co--0 { fill: var(--origin-co-0); }
+.origin-co--1 { fill: var(--origin-co-1); }
+.origin-co--2 { fill: var(--origin-co-2); }
+.origin-co--3 { fill: var(--origin-co-3); }
+.origin-co--4 { fill: var(--origin-co-4); }
+.origin-co--5 { fill: var(--origin-co-5); }
+
+/* Pointing at an origin in the key picks out its scores: the rest fade */
+.option__side[data-highlight] [class*="from-"] { transition: opacity 200ms; }
+.option__side[data-highlight="0"] [class*="from-"]:not(.from-0),
+.option__side[data-highlight="1"] [class*="from-"]:not(.from-1),
+.option__side[data-highlight="2"] [class*="from-"]:not(.from-2),
+.option__side[data-highlight="3"] [class*="from-"]:not(.from-3),
+.option__side[data-highlight="4"] [class*="from-"]:not(.from-4),
+.option__side[data-highlight="5"] [class*="from-"]:not(.from-5) {
+  opacity: 0.15;
+}
+
+/* Light mode: dark on light. Bins are outlines only, and scores take a mellow rubric colour:
+   stronger than the pastels, softer than full strength (the same mix as mellowFill in js/palette.js). */
+.mellow--0 { fill: color-mix(in srgb, var(--rubric-0) 70%, white); }
+.mellow--1 { fill: color-mix(in srgb, var(--rubric-1) 70%, white); }
+.mellow--2 { fill: color-mix(in srgb, var(--rubric-2) 70%, white); }
+.mellow--3 { fill: color-mix(in srgb, var(--rubric-3) 70%, white); }
+.mellow--4 { fill: color-mix(in srgb, var(--rubric-4) 70%, white); }
+.mellow--5 { fill: color-mix(in srgb, var(--rubric-5) 70%, white); }
+
+.option--light .bin-area { fill: none; }
+.option--light .panel .on-dark { fill: var(--color-ink); }
+.panel .on-fill { fill: var(--mu-white); }
+
+/* "4×" on a multiplied score as it grows to its weight, edged so it reads over any colour */
+.grow-badge {
+  stroke: var(--mu-white);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.option--light .grow-badge,
+.grow-badge.on-dark {
+  stroke: none;
+}
+
+/* Switches above the diagrams (colouring, theme): two buttons each, one pressed */
+.switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.switch {
+  display: inline-flex;
+  border: 1.5px solid var(--color-ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.switch__option {
+  padding: 0.4rem 1rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.switch__option + .switch__option {
+  border-left: 1.5px solid var(--color-ink);
+}
+
+.switch__option[aria-pressed="true"] {
+  background: var(--color-ink);
+  color: var(--color-bg);
+  font-weight: 700;
+}
+
+.option__legend {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.option__legend[hidden] {
+  display: none;
+}
+
+.option__legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.option__legend li:hover,
+.option__legend li:focus-visible {
+  outline: none;
+  background: var(--color-box);
+}
+
+.option__swatch {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 3px;
+}
 
 @media (max-width: 60rem) {
   .option__pair { grid-template-columns: minmax(0, 1fr); }
