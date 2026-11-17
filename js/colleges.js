@@ -113,16 +113,22 @@ for (const model of MODELS) {
     .attr("text-anchor", "middle").attr("dominant-baseline", "central")
     .text((_, j) => semesterTotal(model, j));
 
-  // Which side is which, along the left edge.
+  // Which side is which, along the left edge: a bracket spanning the side, named beside it. The text runs upwards,
+  // so → points up the page and ← down it.
+  const far = yOf(model, most);
+  const bracketX = 50;
+  svg.append("path")
+    .attr("class", "college-chart__bracket")
+    .attr("d", `M${bracketX + 8},${mid + model.side * 6}H${bracketX}V${far}H${bracketX + 8}`);
   svg.append("text")
     .attr("class", "college-chart__side")
-    .attr("transform", `translate(28, ${(mid + yOf(model, most)) / 2}) rotate(-90)`)
-    .attr("text-anchor", "middle")
-    .text(model.side < 0 ? `${model.name} ↑` : `↓ ${model.name}`);
+    .attr("transform", `translate(${bracketX - 18}, ${(mid + far) / 2}) rotate(-90)`)
+    .attr("text-anchor", "middle").attr("dominant-baseline", "central")
+    .text(model.side < 0 ? `${model.name} Model →` : `← ${model.name} Model`);
 }
 
 svg.append("line").attr("class", "college-chart__divide")
-  .attr("x1", M.left - 20).attr("x2", VIEW.w - M.right + 10).attr("y1", mid).attr("y2", mid);
+  .attr("x1", 44).attr("x2", VIEW.w - M.right + 10).attr("y1", mid).attr("y2", mid);
 
 /* ---------- Hover: a semester's counts, and the band under the pointer picked out ---------- */
 

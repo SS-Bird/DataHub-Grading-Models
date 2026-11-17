@@ -1,12 +1,12 @@
 // Entry point for the Understanding Grading Models page: three scrolling stories, each a sticky figure
 // whose scene follows the step being read. A scene names what the figure shows besides the chart
-// (`show`: photo, bar, grade, placeholder, or pair to show `pair`'s frame in a second panel beside the chart),
-// whether its scores float, and the chart frame(s) to draw.
+// (`show`: photo, bar, grade, placeholder), whether its scores float, and the chart frame(s) to draw.
 // Several frames play one after another, each held for its `hold`; scrolling back up plays them in reverse.
 // `reset` puts the example back to its default weights first; `grade` gives the course grade to show beside the diagram.
-// `silhouette`: the frame shown while the diagram is hovered (or tapped): its scores as one shape in a box, with a note
-// on what the area means; given `{ melted: true }`, the same area levelled into a rectangle.
-// `unfold`: the frames the step's "Watch a semester unfold" button plays.
+// The step's buttons play a scene's other sequences: `within` (each category's scores melt into their average),
+// `overall` (then the categories close up into one shape, which melts into the overall grade) and `unfold`
+// (the semester from its start). A frame may carry the `grade` and `course` it shows, which the grade beside the diagram
+// and the weight bars then follow, and `note` to show the note on what the area means.
 // The weight bars sit beneath the diagram, lined up with its bins so they name them.
 
 import { createStore } from "./store.js";
@@ -14,7 +14,7 @@ import { createChart } from "./chart.js";
 import { createWeightBar } from "./weights.js";
 import { VIEW, DIAGRAM_SPAN, ALONE_SPAN, TALL, SQUAT, spanOf, assessmentTypeFrame, coFrame, assessmentTypeTrajectory, assessmentTypeSilhouette, coSilhouette } from "./scenes.js";
 import { scatterFrame, groupFrame, rowFrame, networkFrame } from "./pool.js";
-import { assessmentTypeModel, coModel, format, percent } from "./grading.js";
+import { assessmentTypeModel, coModel, format } from "./grading.js";
 import { pastelFill } from "./palette.js";
 import { explainerPresets, earlySemester, sparseOutcome } from "./data.js";
 
@@ -29,7 +29,6 @@ const CO_SPAN = sized ? spanOf(CO_LAYOUT) : DIAGRAM_SPAN;
 const PAUSE = 1600; // between frames of a sequence, unless a frame sets its own `hold`
 const NOTHING = { rects: [], paths: [], lines: [], tokens: [], texts: [] };
 const MIN_SHARE = 0.1; // no category can be dragged below this share of the grade
-const MELT_HOLD = 500; // how long the silhouette keeps its shape before melting
 
 /** The diagram's own timing bounces scores into place; here they glide. */
 const calm = (frame) => ({ ...frame, ease: "smooth", duration: 1200, stagger: 10 });
@@ -80,38 +79,27 @@ function withMultipliers(course, frame, only = () => true) {
   return { ...frame, texts: [...frame.texts, ...badges] };
 }
 
-const coDiagram = (c) => coFrame(c, "fill", { fixedBins: true, sized, alone: true, layout: CO_LAYOUT });
+const coDiagram = (c, stage = "fill", extra = {}) => coFrame(c, stage, { fixedBins: true, sized, alone: true, layout: CO_LAYOUT, ...extra });
 /** The CO diagram with the scores counted once faded, and the multiplied ones labelled. */
 const multipliedFrame = (c) => ({ ...withMultipliers(c, multipliedOnly(c, coDiagram(c))), duration: 600, stagger: 0 });
-const atDiagram = (c) => assessmentTypeFrame(c, "fill", { sized, alone: true });
+const atDiagram = (c, stage = "fill", extra = {}) => assessmentTypeFrame(c, stage, { sized, alone: true, ...extra });
+
+/** Each category's scores melt into their average. */
+const within = (diagram) => (c) => [{ ...calm(diagram(c)), hold: 300 }, diagram(c, "melt")];
+
+/**
+ * Each category melts into its average, the categories close up into one shape as wide as their weights,
+ * then it melts into a rectangle as tall as the overall grade.
+ */
+const overall = (diagram, shape) => (c) => [
+  { ...calm(diagram(c)), hold: 300 },
+  { ...diagram(c, "melt"), hold: 2200 },
+  { ...shape(c, { byCategory: true }), note: true, hold: 1400 },
+  { ...shape(c, { melted: true }), note: true },
+];
 
 const early = (course) => ({ ...course, scores: earlySemester });
 
-/** Assessment types with no scores yet. */
-function unfinished(course) {
-  const typeOf = new Map(course.sessions.map((s) => [s.id, s.type]));
-  return course.assessmentTypes.filter((t) => !course.scores.some((s) => typeOf.get(s.session) === t.id));
-}
-
-/** The course without the assessment types still to come; the others share the diagram (the grade is unchanged). */
-function scoredOnly(course) {
-  const gone = new Set(unfinished(course).map((t) => t.id));
-  return {
-    ...course,
-    assessmentTypes: course.assessmentTypes.filter((t) => !gone.has(t.id)),
-    groups: course.groups.map((g) => ({ ...g, types: g.types.filter((id) => !gone.has(id)) })),
-  };
-}
-
-/** A frame without its title, for a second panel beside one that already has it. */
-const untitled = (frame) => ({ ...frame, texts: frame.texts.filter((t) => t.key !== "title") });
-
-/** Name the assessments still to come, and their shares, above a diagram that leaves them out. */
-function withStillToCome(course, frame) {
-  const names = unfinished(course).map((t) => `${t.name} (${percent(t.weight)})`);
-  if (!names.length) return frame;
-  return { ...frame, texts: [...frame.texts, { key: "still-to-come", x: VIEW.w / 2, y: 64, text: `Still to come: ${names.join(", ")}`, size: 13, anchor: "middle", cls: "label label--small" }] };
-}
 const sparse = (course) => ({ ...course, scores: sparseOutcome });
 
 /** The course with one assessment type's scores counted only once. */
@@ -134,26 +122,30 @@ function spotlight(course, sessionId, frame) {
  * they're labelled "2×", "3×", …; then the diagram returns to normal. It starts and ends on the plain diagram.
  */
 function coSemester(course) {
-  const step = (frame, timing) => ({ ...frame, ease: "smooth", duration: 450, stagger: 0, hold: 650, ...timing });
-  const frames = [step(coDiagram({ ...course, scores: [] }))];
+  const running = (c) => coDiagram(c, "fill", { running: true });
+  const step = (frame, c, timing) => ({ ...frame, ease: "smooth", duration: 450, stagger: 0, hold: 650, course: c, grade: coModel(c).final, ...timing });
+  const empty = { ...course, scores: [] };
+  const frames = [step(running(empty), empty)];
   course.sessions.forEach((session, i) => {
     const held = new Set(course.sessions.slice(0, i + 1).map((s) => s.id));
     const sofar = { ...course, scores: course.scores.filter((s) => held.has(s.session)) };
     const multiplier = course.assessmentTypes.find((t) => t.id === session.type)?.multiplier ?? 1;
     if (multiplier > 1) {
-      frames.push(step(coDiagram(countedOnce(sofar, session.type)), { hold: 700 }));
-      frames.push(step(spotlight(course, session.id, coDiagram(sofar)), { duration: 800, hold: 1600 }));
+      const once = countedOnce(sofar, session.type);
+      frames.push(step(running(once), once, { hold: 700 }));
+      frames.push(step(spotlight(course, session.id, running(sofar)), sofar, { duration: 800, hold: 1600 }));
     }
-    frames.push(step(coDiagram(sofar)));
+    frames.push(step(running(sofar), sofar));
   });
   return frames;
 }
 
-/** The semester from its start: the diagram with each session's scores arriving in turn. */
-function semester(course, diagram) {
+/** The semester from its start: the diagram with each session's scores arriving in turn, and the grade so far. */
+function semester(course, diagram, model) {
   return [{ sessions: [] }, ...course.sessions.map((_, i) => ({ sessions: course.sessions.slice(0, i + 1) }))].map(({ sessions }) => {
     const held = new Set(sessions.map((s) => s.id));
-    return { ...diagram({ ...course, scores: course.scores.filter((s) => held.has(s.session)) }), ease: "smooth", duration: 450, stagger: 0, hold: 650 };
+    const sofar = { ...course, scores: course.scores.filter((s) => held.has(s.session)) };
+    return { ...diagram(sofar, "fill", { running: true }), ease: "smooth", duration: 450, stagger: 0, hold: 650, course: sofar, grade: model(sofar).final };
   });
 }
 
@@ -184,17 +176,21 @@ const STORIES = {
       diagram: {
         show: "bar",
         frames: (c) => intoBins(inRow(byMedium(c), atDiagram(c)), atDiagram(c)),
-        silhouette: assessmentTypeSilhouette,
+        within: within(atDiagram),
+        overall: overall(atDiagram, assessmentTypeSilhouette),
       },
-      unfold: { show: "bar", frames: (c) => calm(atDiagram(c)), unfold: (c) => semester(c, atDiagram) },
+      unfold: {
+        show: "bar grade",
+        frames: (c) => calm(atDiagram(c)),
+        grade: (c) => assessmentTypeModel(c).final,
+        unfold: (c) => semester(c, atDiagram, assessmentTypeModel),
+      },
       // From here on the example is back at its default weights and can't be edited.
       staircase: { reset: true, frames: (c) => assessmentTypeTrajectory(c) },
-      // Early in the semester: the assignments still to come are left out, so what there is has room;
-      // beside the diagram, the same scores stacked, where the few in-class scores stand tall.
+      // Early in the semester: the assignments still to come are hatched out, empty.
       early: {
-        show: "grade pair",
-        frames: (c) => withStillToCome(early(c), calm(atDiagram(scoredOnly(early(c))))),
-        pair: (c) => untitled(assessmentTypeTrajectory(early(c))),
+        show: "bar grade",
+        frames: (c) => ({ ...calm(atDiagram(early(c))), course: early(c) }),
         grade: (c) => assessmentTypeModel(early(c)).final,
       },
     },
@@ -213,11 +209,12 @@ const STORIES = {
       diagram: {
         show: "bar",
         frames: (c) => intoBins(inRow(byPurpose(c), coDiagram(c), CO_VIEW, CO_SPAN), coDiagram(c)),
-        silhouette: (c, options) => coSilhouette(c, { ...options, layout: CO_LAYOUT }),
+        within: within(coDiagram),
+        overall: overall(coDiagram, (c, options) => coSilhouette(c, { ...options, layout: CO_LAYOUT })),
       },
       multiplied: { show: "bar", frames: (c) => multipliedFrame(c) },
       // Back to the plain diagram; the button plays the semester, ending there too.
-      unfold: { show: "bar", frames: (c) => calm(coDiagram(c)), unfold: coSemester },
+      unfold: { show: "bar grade", frames: (c) => calm(coDiagram(c)), grade: (c) => coModel(c).final, unfold: coSemester },
       sparse: {
         show: "grade", reset: true,
         frames: (c) => calm(coDiagram(sparse(c))),
@@ -232,8 +229,6 @@ function createStory(section, { view, span = ALONE_SPAN, scenes }) {
   const figure = section.querySelector(".story__figure");
   const svg = figure.querySelector(".panel svg");
   const chart = createChart(svg, view);
-  const pairSvg = figure.querySelector(".story__pair svg");
-  const pair = pairSvg && createChart(pairSvg, view);
   const store = createStore(explainerPresets);
   const bars = [...figure.querySelectorAll(".weights__bar")].map((el) => createWeightBar(el, store, el.dataset.list, { horizontal: Boolean(el.closest(".panel")), min: MIN_SHARE }));
   // Bars beneath the diagram line up with it (the old version's bars stand beside it instead).
@@ -244,33 +239,37 @@ function createStory(section, { view, span = ALONE_SPAN, scenes }) {
   let leaving = null; // the scene just scrolled back up out of, if any
   let timer = null;
 
+  function showGrade(value) {
+    if (!grade || value === undefined) return;
+    grade.textContent = format(value);
+    grade.style.background = value === null ? "" : pastelFill(value);
+  }
+
   /** Draw the scene; after an edit, jump straight to the end of its sequence. */
   function draw({ replay = true } = {}) {
-    clearTimeout(timer);
-    silhouette(false, { redraw: false });
     const course = store.get();
     let frames = [].concat(scenes[scene].frames(course));
     // Scrolling back up undoes the scene being left, frame by frame, then settles on this scene's last frame.
     if (leaving) frames = [...[].concat(scenes[leaving].frames(course)).slice(0, -1).reverse(), frames.at(-1)];
-    pair?.render(scenes[scene].pair?.(course) ?? NOTHING);
-    const value = scenes[scene].grade?.(store.get()) ?? null;
-    if (grade && value !== null) {
-      grade.textContent = format(value);
-      grade.style.background = pastelFill(value);
-    }
     play(frames, replay ? 0 : frames.length - 1);
   }
 
-  /** Play frames one after another from `from`, each held for its `hold`. */
+  /**
+   * Play frames one after another from `from`, each held for its `hold`. The grade beside the diagram, the weight bars
+   * and the note follow each frame (the scene's own grade and the example as it is, unless the frame says otherwise).
+   */
   function play(frames, from = 0) {
     clearTimeout(timer);
-    chart.render(frames[from]);
-    if (from + 1 < frames.length) timer = setTimeout(() => play(frames, from + 1), frames[from].hold ?? PAUSE);
+    const frame = frames[from];
+    chart.render(frame);
+    showGrade("grade" in frame ? frame.grade : scenes[scene].grade?.(store.get()));
+    bars.forEach((b) => b.render(frame.course));
+    if (note) note.hidden = !frame.note;
+    if (from + 1 < frames.length) timer = setTimeout(() => play(frames, from + 1), frame.hold ?? PAUSE);
   }
 
   function enter(name) {
     if (name === scene) return;
-    silhouette(false, { redraw: false });
     leaving = scene && order.indexOf(name) < order.indexOf(scene) ? scene : null;
     scene = name;
     const { show = "", float = false, reset = false } = scenes[name];
@@ -283,8 +282,8 @@ function createStory(section, { view, span = ALONE_SPAN, scenes }) {
 
   let entering = false;
   store.subscribe(() => {
-    bars.forEach((b) => b.render());
     if (scene) draw({ replay: entering });
+    else bars.forEach((b) => b.render());
     entering = false;
   });
   bars.forEach((b) => b.render());
@@ -312,42 +311,13 @@ function createStory(section, { view, span = ALONE_SPAN, scenes }) {
   }
   new ResizeObserver(align).observe(svg);
 
-  /* ---------- Silhouette: the area the scores cover ---------- */
-
-  /** Show the scene's silhouette in place of its diagram, or put the diagram back (unless `redraw` is false). */
-  function silhouette(on, { redraw = true } = {}) {
-    if (figure.classList.contains("is-silhouette") === on) return;
-    figure.classList.toggle("is-silhouette", on);
-    if (note) note.hidden = !on;
-    if (!redraw) return;
-    const course = store.get();
-    if (!on) return play([{ ...[].concat(scenes[scene].frames(course)).at(-1), duration: 500, stagger: 0 }]);
-    // The scores close up into one shape, hold it for half a second, then melt into a rectangle of the same area.
-    const shape = scenes[scene].silhouette(course);
-    play([{ ...shape, hold: shape.duration + MELT_HOLD }, scenes[scene].silhouette(course, { melted: true })]);
-  }
-
-  /** Whether the pointer is over the bins (in the diagram's own units). */
-  function overBins(e) {
-    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
-    return p.x >= span.x && p.x <= span.x + span.w && p.y >= span.top && p.y <= span.base;
-  }
-
-  const canSilhouette = () => Boolean(note && scene && scenes[scene].silhouette);
-  svg.addEventListener("pointermove", (e) => e.pointerType === "mouse" && canSilhouette() && silhouette(overBins(e)));
-  svg.addEventListener("pointerleave", (e) => e.pointerType === "mouse" && silhouette(false));
-  // A tap turns it on and off, on touch screens.
-  svg.addEventListener("pointerdown", (e) => {
-    if (e.pointerType !== "mouse" && canSilhouette()) silhouette(overBins(e) && !figure.classList.contains("is-silhouette"));
-  });
-
-  /* ---------- Watch a semester unfold ---------- */
+  /* ---------- The step's buttons: averages, and a semester unfolding ---------- */
 
   section.addEventListener("click", (e) => {
-    const button = e.target.closest("[data-action='unfold']");
+    const button = e.target.closest("[data-action]");
     if (!button) return;
     enter(button.closest(".step").dataset.scene);
-    play(scenes[scene].unfold(store.get()));
+    play(scenes[scene][button.dataset.action](store.get()));
   });
 
   // A step becomes active when it crosses the reading line: the middle of the screen beside the figure,

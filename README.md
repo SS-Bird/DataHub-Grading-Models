@@ -21,6 +21,7 @@ Then open http://localhost:8001
 | `calculations.html` | Calculations with Grading Models: an editable example course, worked through as bins |
 | `try-it-yourself.html` | Try It Yourself: drag scores into both models and edit the class structure |
 | `course-models-by-college.html` | Model Use at Minerva: a stream graph of each college's courses per model |
+| `diagram-options.html` | Temp: Diagram Options: five ways to draw the grade diagram, each with both models side by side |
 | `understanding-original.html`, `calculations-original.html` | Earlier versions of the first two pages (areas instead of bins), under "Old versions" |
 | `css/styles.css` | All styling, including brand tokens and chart colours |
 | `js/data.js` | The example courses and presets |
@@ -37,6 +38,8 @@ Then open http://localhost:8001
 | `js/understanding.js` | Understanding pages: which scene each scroll step shows |
 | `js/try.js` | Try It Yourself page |
 | `js/colleges.js` | Model Use at Minerva: the stream graph, its data and table |
+| `js/variants.js` | Diagram Options: frames for each way of drawing the grade (bins, histogram, stacked bar, pie, rose) |
+| `js/diagram-options.js` | Diagram Options page: wires each option's buttons, weight controls and charts |
 
 To change the default example, edit `js/data.js` (the Understanding page uses `explainer` there); equations and results update automatically.
 To add a step to the Calculations page, add an `<article class="step">` in `calculations.html` and a frame in `js/scenes.js`.

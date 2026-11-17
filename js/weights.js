@@ -3,8 +3,10 @@
 //   assessmentTypes / outcomes: every category's weight;
 //   groups: In-Class against Assignments, scaling the categories inside each;
 //   withinGroups: the categories, but only within their group's share (the edges between groups stay put).
-//   los: each LO's share of the CO model, which follows from how many of its CO's scores it has (read only).
+//   los: each LO's share of the CO model, which follows from how many of its CO's scores it has (read only);
+//        a CO with no scores yet shares itself equally among its LOs.
 // `min` is the smallest share of the whole bar any category can be dragged down to.
+// `render(course)` can show another course than the store's (a semester part way through, say), without editing it.
 
 import { assessmentTypeModel, coModel, percent } from "./grading.js";
 import { MIN_WEIGHT } from "./store.js";
@@ -47,7 +49,7 @@ const BARS = {
   los: {
     title: "LO shares",
     name: (lo) => lo.name,
-    items: (c) => coModel(c).outcomes.flatMap((o) => o.los),
+    items: (c) => coModel(c).outcomes.flatMap((o) => (o.scores.length ? o.los : o.los.map((lo) => ({ ...lo, weight: o.weight / o.los.length })))),
     categories: (c) => coModel(c).outcomes.flatMap((o) => o.los),
     tone: (c, lo) => c.outcomes.findIndex((o) => o.los.includes(lo.id)) % 2,
     fixed: () => true, // no edge can be dragged
@@ -128,9 +130,8 @@ export function createWeightBar(track, store, list, { horizontal = false, min = 
     return handle;
   });
 
-  function render() {
-    const course = store.get();
-    const list = items();
+  function render(course = store.get()) {
+    const list = bar.items(course);
     const total = sum(list.map((t) => t.weight)) || 1;
     const scored = new Set(bar.categories(course).filter((c) => c.scores.length).map((c) => c.id));
     let at = 0;

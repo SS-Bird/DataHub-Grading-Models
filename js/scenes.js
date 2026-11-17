@@ -648,9 +648,11 @@ const levelBox = (inner, base, unit, value) => ({ x: inner.x, y: base - value * 
  * entries named under the floor (the CO model's LOs). `area` may set `x` and `w` (the panel's width otherwise).
  *   keepEmpty: keep bins without scores (no cutting); multipliers: label scores counted more than once;
  *   gradeLine: a line across the bins at the height of the grade to date;
- *   labels: false leaves the bins and their LOs unnamed, and puts their floor on the bottom of the area.
+ *   labels: false leaves the bins and their LOs unnamed, and puts their floor on the bottom of the area;
+ *   running: each bin's average so far, as a line across it at that height and a number above it;
+ *   fillBins: melted scores fill their bin from wall to wall.
  */
-function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind, multipliers = false, gradeLine = false, labels = true }) {
+function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind, multipliers = false, gradeLine = false, labels = true, running = false, fillBins = false }) {
   const L = sizedIndex(stage);
   const f = blank();
   if (L < sizedIndex("frame")) return f;
@@ -706,8 +708,15 @@ function sizedBins(cats, final, stage, area, complete, { keepEmpty = false, kind
     }
 
     if (L >= sizedIndex("melt") && c.average !== null) {
-      f.rects.push(...water(slots(scoresOf(c), inner), base, unit, c.average));
-      f.texts.push(placedAverage(`avg-${c.id}`, c.average, levelBox(inner, base, unit, c.average), c.weight, "", "on-dark"));
+      const pool = fillBins ? box : inner;
+      f.rects.push(...water(slots(scoresOf(c), pool), base, unit, c.average));
+      f.texts.push(placedAverage(`avg-${c.id}`, c.average, levelBox(pool, base, unit, c.average), c.weight, "", "on-dark"));
+    }
+
+    if (running && L === sizedIndex("fill") && c.average !== null) {
+      const y = base - c.average * unit;
+      f.outlines.push({ key: `run-line-${c.id}`, cls: "avg-line", d: `M${box.x},${y}H${box.x + box.w}` });
+      f.texts.push({ key: `run-lbl-${c.id}`, x: box.x + box.w / 2, y: top - 24, text: format(c.average), size: clamp(box.w / 5, 11, 16), anchor: "middle", cls: "label label--strong" });
     }
   });
 
@@ -869,7 +878,7 @@ function gradeHeader(final, complete) {
  * Options: `sandbox`, the filled diagram under its grade; `sized`, sized bins (stages from SIZED_STAGES);
  * `alone`, the sized diagram on its own with every bin kept, for the Understanding page, laid out by `layout`.
  */
-function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind, final, complete }, { sandbox = false, sized = false, alone = false, layout = TALL } = {}) {
+function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind, final, complete }, { sandbox = false, sized = false, alone = false, layout = TALL, running = false, fillBins = false } = {}) {
   const bins = (at, area, opts) => sizedBins(sizedCats, final, at, area, complete, { ...opts, kind });
   if (sandbox) {
     const frame = merge(title(name), gradeHeader(final, complete), sized ? bins("fill", SANDBOX_SIZED, { keepEmpty: true, gradeLine: true }) : grade("fill", SANDBOX));
@@ -881,7 +890,7 @@ function build(stage, { name, example: ex, cats, groups, grade, sizedCats, kind,
     }));
     return { ...frame, ...SANDBOX_TIMING };
   }
-  if (sized && alone) return { ...merge(title(name, layout.view), bins(stage, layout.alone, { keepEmpty: true, labels: false })), ...SIZED_TIMING[stage] };
+  if (sized && alone) return { ...merge(title(name, layout.view), bins(stage, layout.alone, { keepEmpty: true, labels: false, running, fillBins })), ...SIZED_TIMING[stage] };
   if (sized) return sizedDemo(stage, name, ex, bins, sizedCats, final);
   const L = stageIndex(stage);
   let body;
@@ -938,21 +947,23 @@ export function coFrame(course, stage, options = {}) {
  * (every score a 5), and each score a slice as wide as its share of the grade and as tall as its score, with no gaps
  * between bins, so the area the shape covers is the grade. `cats` are the bins ({ weight, scores }), in order; slices
  * keep their scores' keys, so the diagram's bars close up into the shape. `melted` levels every slice at the shape's
- * mean height: a rectangle with the same area. Faint lines mark each grade, 0 to 5, numbered on the left.
+ * mean height: a rectangle with the same area, with the grade written on it. `byCategory` levels each bin's slices
+ * at that bin's average instead. Faint lines mark each grade, 0 to 5, numbered on the left.
  */
-function silhouette(cats, { melted = false, layout = TALL } = {}) {
+function silhouette(cats, { melted = false, byCategory = false, layout = TALL } = {}) {
   const { alone } = layout;
   const { base, unit } = binSpace(alone, UNLABELLED_FLOOR);
   const box = { x: alone.x, w: alone.w, top: base - SCORE_MAX * unit };
   const scored = cats.filter((c) => c.scores.length);
   const total = sum(scored.map((c) => c.weight)) || 1;
-  const slices = scored.flatMap((c) => c.scores.map((s) => ({ s, w: (box.w * c.weight) / total / c.scores.length })));
+  const average = (c) => sum(c.scores.map((s) => s.score)) / c.scores.length;
+  const slices = scored.flatMap((c) => c.scores.map((s) => ({ s, w: (box.w * c.weight) / total / c.scores.length, avg: average(c) })));
   // Melted, every slice levels out at the shape's mean height, so together they make one rectangle of the same area.
   const level = sum(slices.map(({ s, w }) => s.score * w)) / box.w;
   const f = blank();
   let x = box.x;
-  slices.forEach(({ s, w }) => {
-    const h = (melted ? level : s.score) * unit;
+  slices.forEach(({ s, w, avg }) => {
+    const h = (melted ? level : byCategory ? avg : s.score) * unit;
     // A hair wider than its slice, so neighbours overlap and no seam shows between them.
     f.tokens.push(token(s, x + w / 2, base - h / 2, w, { w: w + 0.6, h, round: false, rx: 0, text: "", cls: "token--silhouette" }));
     x += w;
@@ -964,7 +975,10 @@ function silhouette(cats, { melted = false, layout = TALL } = {}) {
     if (k > 0 && k < SCORE_MAX) f.outlines.push({ key: `grade-mark-${k}`, cls: "grade-mark", d: `M${box.x},${y}H${box.x + box.w}` });
     f.texts.push({ key: `grade-mark-lbl-${k}`, x: box.x - 6, y, text: String(k), size: 12, anchor: "end", cls: "label label--small" });
   }
-  return { ...f, ease: "smooth", duration: melted ? 1200 : 500, stagger: 0 };
+  if (melted && slices.length) {
+    f.texts.push({ key: "silhouette-grade", x: box.x + box.w / 2, y: base - (level * unit) / 2, text: format(level), size: 56, anchor: "middle", cls: "average", after: true });
+  }
+  return { ...f, ease: "smooth", duration: melted ? 1200 : 700, stagger: 0 };
 }
 
 /** The Assessment Type Model's silhouette: a bin for each assessment type. */

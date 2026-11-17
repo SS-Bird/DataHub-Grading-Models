@@ -27,6 +27,13 @@ The scores come from the 0 to 5 rubric.
 4. Excellent. Understanding of the learning outcome is evident through clear, well-justified work at an appropriate level of depth.
 5. Profound. Work uses the learning outcome in a productive and meaningful way that is relevant to the task and goes well beyond the stated and implied scope.
 
+0. Not attempted
+1. Largely imcomplete.
+2. Passable but partial understanding. 
+3. On Target. 
+4. Excellent.
+5. Profound. 
+
 **Step — floating scores:**
 > Not every score you receive is equally important, or equally reflective of your ability and understanding, so scores need to be organised to mirror the effort each student puts into each application and the course's goals for its students.
 

@@ -3,11 +3,12 @@
 //
 // Tokens are score markers: a rounded square that is a circle when `round` and a cube otherwise
 // (`w`/`h` stretch a cube so it can join its neighbours; `rx` sets its corners). Outlines are paths drawn above the tokens.
-// Rects with `fill` blend to that colour; `hatch` fills them with diagonal hatching; `start` ({ x, y, w, h })
-// is where a new rect grows from.
+// Rects and paths with `fill` blend to that colour; `hatch` fills them with diagonal hatching; `start` ({ x, y, w, h },
+// or a path's `d`) is where a new one grows from. Paths may set `opacity`.
 // Links join two tokens (by key) and follow them as they move.
 // A frame may set `ease`, `duration` and `stagger` (delay per unit of an element's `order`).
 // The ease applies to tokens only; the diagram itself (areas, lines, outlines, text) always moves smoothly.
+// Texts may `rotate` (degrees, about their own position).
 // Lines with `draw` trace themselves from start to end; `width` overrides their stroke width; `opacity` fades them.
 // Elements with `after` wait until the rest of their transition has finished.
 // Rects are drawn in the order they are listed.
@@ -72,17 +73,20 @@ export function createChart(svg, view) {
     rects.filter((d) => !d.hatch && !d.fill).interrupt("fill").style("fill", null);
     rects.filter((d) => !d.hatch && d.fill).transition("fill").duration(duration).delay(delay).style("fill", (d) => d.fill);
 
-    layers.paths.selectAll("path")
+    const paths = layers.paths.selectAll("path")
       .data(frame.paths, byKey)
       .join(
-        (enter) => enter.append("path").attr("opacity", 0).attr("d", (d) => d.d),
+        (enter) => enter.append("path").attr("opacity", 0).attr("d", (d) => d.start ?? d.d),
         (update) => update,
         fadeOut,
       )
-      .attr("class", (d) => d.cls ?? "")
-      .transition(t).ease(SHAPE_EASE).delay(delay)
-      .attr("opacity", 1)
+      .attr("class", (d) => d.cls ?? "");
+    paths.transition(t).ease(SHAPE_EASE).delay(delay)
+      .attr("opacity", (d) => d.opacity ?? 1)
       .attr("d", (d) => d.d);
+    paths.filter((d) => d.hatch).interrupt("fill").style("fill", `url(#${hatch})`);
+    paths.filter((d) => !d.hatch && !d.fill).interrupt("fill").style("fill", null);
+    paths.filter((d) => !d.hatch && d.fill).transition("fill").duration(duration).delay(delay).style("fill", (d) => d.fill);
 
     layers.lines.selectAll("line.line")
       .data(frame.lines, byKey)
@@ -167,6 +171,7 @@ export function createChart(svg, view) {
       .attr("text-anchor", (d) => d.anchor ?? "start")
       .text((d) => d.text)
       .transition(t).ease(SHAPE_EASE).delay(delay)
+      .attr("transform", (d) => (d.rotate ? `rotate(${d.rotate},${d.x},${d.y})` : null))
       .attr("opacity", 1)
       .attr("font-size", (d) => d.size ?? 14)
       .attr("x", (d) => d.x).attr("y", (d) => d.y);

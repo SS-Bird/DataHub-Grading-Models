@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diagram Options</title>
+  <meta name="description" content="Temporary page: different ways to draw the grade diagram for both models, side by side.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/diagram-options.js"></script>
+</head>
+<body>
+
+  <header class="site-header">
+    <nav aria-label="Site">
+      <ul class="site-nav">
+        <li class="site-nav__item">
+          <a href="understanding.html">Understanding Grading Models <span aria-hidden="true">▾</span></a>
+          <ul class="site-nav__menu">
+            <li><a href="understanding.html#what-are-grading-models">What are Grading Models?</a></li>
+            <li><a href="understanding.html#assessment-type-model">Assessment Type Model</a></li>
+            <li><a href="understanding.html#co-based-model">CO Based Model</a></li>
+          </ul>
+        </li>
+        <li class="site-nav__item">
+          <a href="calculations.html">Calculations with Grading Models</a>
+        </li>
+        <li class="site-nav__item">
+          <a href="course-models-by-college.html">Model Use at Minerva</a>
+        </li>
+        <li class="site-nav__item">
+          <a href="diagram-options.html" aria-current="page">Temp: Diagram Options</a>
+        </li>
+        <li class="site-nav__item site-nav__item--button">
+          <a class="site-nav__button" href="try-it-yourself.html">Try It Yourself</a>
+        </li>
+        <li class="site-nav__item">
+          <span class="site-nav__label site-nav__label--faint" tabindex="0">Old versions <span aria-hidden="true">▾</span></span>
+          <ul class="site-nav__menu">
+            <li><a href="understanding-original.html">Understanding Grading Models</a></li>
+            <li><a href="calculations-original.html">Calculations for each Grading Model</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <a class="site-logo" href="index.html"><img src="images/logo.png" alt="Data Hub"></a>
+  </header>
+
+  <main>
+    <section class="hero hero--short" aria-labelledby="page-title">
+      <h1 id="page-title">Temp: Diagram Options</h1>
+    </section>
+
+    <section class="option" data-variant="bins" aria-labelledby="option-bins">
+      <h2 id="option-bins">1. Bins (current)</h2>
+      <div class="play-buttons option__buttons">
+        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
+        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
+        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        <button type="button" class="play-button" data-action="fill">Show the scores</button>
+      </div>
+      <div class="option__pair">
+        <figure class="option__side" data-model="at">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+        <figure class="option__side" data-model="co">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="option" data-variant="histogram" aria-labelledby="option-histogram">
+      <h2 id="option-histogram">2. Histogram</h2>
+      <div class="play-buttons option__buttons">
+        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
+        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
+        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        <button type="button" class="play-button" data-action="fill">Show the scores</button>
+      </div>
+      <div class="option__pair">
+        <figure class="option__side" data-model="at">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+        <figure class="option__side" data-model="co">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="option" data-variant="stacked" aria-labelledby="option-stacked">
+      <h2 id="option-stacked">3. Stacked bar</h2>
+      <div class="play-buttons option__buttons">
+        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
+        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
+        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        <button type="button" class="play-button" data-action="fill">Show the scores</button>
+      </div>
+      <div class="option__pair">
+        <figure class="option__side" data-model="at">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+        <figure class="option__side" data-model="co">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="option" data-variant="pie" aria-labelledby="option-pie">
+      <h2 id="option-pie">4. Pie chart</h2>
+      <div class="play-buttons option__buttons">
+        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
+        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
+        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        <button type="button" class="play-button" data-action="fill">Show the scores</button>
+      </div>
+      <div class="option__pair">
+        <figure class="option__side" data-model="at">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+        <figure class="option__side" data-model="co">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="option" data-variant="rose" aria-labelledby="option-rose">
+      <h2 id="option-rose">5. Pie chart, radius by score</h2>
+      <div class="play-buttons option__buttons">
+        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
+        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
+        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        <button type="button" class="play-button" data-action="fill">Show the scores</button>
+      </div>
+      <div class="option__pair">
+        <figure class="option__side" data-model="at">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+        <figure class="option__side" data-model="co">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>
