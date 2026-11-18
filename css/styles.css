@@ -2649,9 +2649,19 @@ img.story__photo {
   transition: background 600ms;
 }
 
-/* An option whose diagram holds the course grade itself (the ring) has no grade beside it */
-.option--grade-inside .option__grade { display: none; }
-.option--grade-inside:not(.option--keyed) .option__side { grid-template-columns: minmax(0, 1fr); }
+/* Older options, folded away beneath the current ones */
+.old-options {
+  border-top: 1px solid var(--color-box);
+}
+
+.old-options > summary {
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: 2rem var(--gutter);
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
 
 /* The diagrams' marks */
 
@@ -2691,9 +2701,9 @@ img.story__photo {
   /* CO Model: assessment types. Polls and comments, both in class, are neighbouring greens. */
   --origin-co-0: #2b6633; /* forest: polls */
   --origin-co-1: #8cc488; /* light green: comments */
-  --origin-co-2: #23488a; /* navy: essay */
-  --origin-co-3: #6fa3cf; /* light blue: paper */
-  --origin-co-4: #8b2121; /* dark red: final */
+  --origin-co-2: #23488a; /* navy: assignment 1 */
+  --origin-co-3: #6fa3cf; /* light blue: assignment 2 */
+  --origin-co-4: #8b2121; /* dark red: assignment 3 */
   --origin-co-5: #d4652b; /* rust orange */
 }
 
@@ -2821,6 +2831,15 @@ img.story__photo {
 
 .option--keyed .option__chart { grid-area: chart; }
 .option--keyed .option__grade { grid-area: grade; }
+
+/* The pie and ring take their key beneath them, as wide as the pie */
+.option--keyed.option--key-below .option__side {
+  grid-template-columns: minmax(0, 1fr) 5rem;
+  grid-template-areas: "chart grade" "key grade";
+  align-items: center;
+}
+
+.option--key-below .option__chart { padding-bottom: 0.5rem; }
 
 .option__key {
   grid-area: key;

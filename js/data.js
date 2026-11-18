@@ -160,11 +160,12 @@ export const explainerPresets = [{ id: "explainer", name: "Example", course: exp
 
 // The same course for the Temp: Diagram Options page, its assignments simply numbered (polls and comments keep their names).
 const ASSIGNMENT_NAMES = { essay: "Assignment 1", paper: "Assignment 2", final: "Assignment 3" };
+const ASSIGNMENT_SHORT = { essay: "Asgmt 1", paper: "Asgmt 2", final: "Asgmt 3" }; // in labels
 export const optionPresets = [{
   id: "options", name: "Example", course: {
     ...explainer,
     sessions: explainer.sessions.map((s) => (ASSIGNMENT_NAMES[s.id] ? { ...s, name: ASSIGNMENT_NAMES[s.id] } : s)),
-    assessmentTypes: explainer.assessmentTypes.map((t) => (ASSIGNMENT_NAMES[t.id] ? { ...t, name: ASSIGNMENT_NAMES[t.id], shortName: ASSIGNMENT_NAMES[t.id] } : t)),
+    assessmentTypes: explainer.assessmentTypes.map((t) => (ASSIGNMENT_NAMES[t.id] ? { ...t, name: ASSIGNMENT_NAMES[t.id], shortName: ASSIGNMENT_SHORT[t.id] } : t)),
   },
 }];
 

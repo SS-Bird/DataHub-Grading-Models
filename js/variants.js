@@ -7,10 +7,8 @@
 //   filling    the same bins, filled by bands of one constant height, so a bin fills up as scores arrive
 //              (in both, a multiplied score is one band, that many times taller, and new scores land on top;
 //              coloured by origin, the bands gather by origin instead)
-//   rose       a slice per category as wide as its weight, each score an equal piece whose radius is set by its score
-//              (a 5 reaches the rim, a 1 a fifth of the way)
-//   donut      the same as a ring: each piece stands out from an inner circle, as high as its score; the course
-//              grade to date sits in the middle (`gradeInside`)
+//   donut      a ring with a slice per category as wide as its weight, each score an equal piece standing out from a
+//              small inner circle, as high as its score (drawn by `rose`, which with no hole would draw it as a pie)
 // Averaged within, each category fills its bin (or slice); averaged overall, the grade fills the whole diagram.
 //
 // Options (passed in each mode's `options`):
@@ -23,7 +21,8 @@
 //   grow:      { ids, times }: a badge ("4×") on the scores with these ids, as they grow to their weight.
 // Score elements coloured or marked by origin get the class `from-N` (N in originsOf order), so the page can pick them out.
 // Every variant also names where its weight control sits (`control`, in viewBox units): a bar beneath the bins, or a
-// ring around the pie; and the height its diagram spans (`control.span`: top and base), for a key beside it.
+// ring around the pie; and the height its diagram spans (`control.span`: top and base), for a key beside it, or, for
+// a key beneath it, its width (`span.across`: left and right).
 
 import { assessmentTypeModel, coModel, format, percent, SCORE_MAX } from "./grading.js";
 import { pastelFill, mellowFill } from "./palette.js";
@@ -292,8 +291,10 @@ function stacked(model, course, mode, { running = false, full = course, constant
       const h = b.count * (isNew(b) ? landUnit : unit);
       y -= h;
       const band = { key: `band-${b.key}`, x: box.x, y, w: box.w, h, start: { x: box.x, y: STACK.top - DROP - h, w: box.w, h } };
-      if (mode === "fill") f.rects.push({ ...band, cls: `band ${colourOf(model, colouring, theme, b.score, index.get(b.origin))}` });
-      else f.rects.push({ ...band, cls: "band band--melted", fill: scoreFill(mode === "overall" ? final : c.average, theme) });
+      // Melting keeps the score's colour class, so its colour blends straight into the average's.
+      const colour = `band ${colourOf(model, colouring, theme, b.score, index.get(b.origin))}`;
+      if (mode === "fill") f.rects.push({ ...band, cls: colour });
+      else f.rects.push({ ...band, cls: `${colour} band--melted`, fill: scoreFill(mode === "overall" ? final : c.average, theme) });
       if (grow?.ids.has(b.key)) f.texts.push(growBadge(b.key, box.x + box.w / 2, y + h / 2, grow.times));
     });
     if (c.average === null) return;
@@ -431,7 +432,9 @@ function rose(model, course, mode, { colouring = "rubric", grow = null, hole = 0
       const b1 = a0 + ((a1 - a0) * at) / n;
       const value = mode === "fill" ? s.score : mode === "within" ? c.average : final;
       // The pie always takes the mellow rubric colours.
-      const cls = mode !== "fill" ? "slice slice--melted" : `slice ${colourOf(model, colouring, "light", s.score, index.get(originId(model, s)))}`;
+      // Melting keeps the score's colour class, so its colour blends straight into the average's (not through black).
+      const colour = `slice ${colourOf(model, colouring, "light", s.score, index.get(originId(model, s)))}`;
+      const cls = mode === "fill" ? colour : `${colour} slice--melted`;
       f.paths.push({ key: `slice-${s.key}`, cls, d: piece(slice, radius(value), b0, b1, hole), ...(mode === "fill" ? {} : { fill: scoreFill(value, "light") }) });
       if (grow?.ids.has(s.copyOf ?? s.key)) {
         const [x, y] = polar(hole ? (hole + radius(value)) / 2 : Math.max(radius(value) * 0.7, slice.apexD + 20), (b0 + b1) / 2);
@@ -440,13 +443,7 @@ function rose(model, course, mode, { colouring = "rubric", grow = null, hole = 0
     });
   });
   if (mode === "overall" && final !== null) {
-    if (!hole) f.texts.push(label("pie-final", PIE.cx, PIE.cy - radius(final) - 22, format(final), 32, { cls: "average", after: true }));
-  }
-  // A ring holds the course grade to date in its middle.
-  if (hole) {
-    f.texts.push(label("ring-grade-title", PIE.cx, PIE.cy - 22, "Course grade", 12, { cls: "label" }));
-    f.texts.push(label("ring-grade-title-2", PIE.cx, PIE.cy - 8, "to date", 12, { cls: "label" }));
-    f.texts.push(label("ring-grade", PIE.cx, PIE.cy + 26, format(final), 30, { cls: "label label--strong" }));
+    f.texts.push(label("pie-final", PIE.cx, PIE.cy - radius(final) - 22, format(final), 32, { cls: "average", after: true }));
   }
   ring(f, slices, mode !== "overall");
   return f;
@@ -455,25 +452,24 @@ function rose(model, course, mode, { colouring = "rubric", grow = null, hole = 0
 /* ---------- The variants ---------- */
 
 /** A variant from a draw function (model, course, mode, options); `extra` options apply in every mode (a fixed `theme`, too). */
-const variant = (draw, control, { colourings = false, themes = false, gradeInside = false, lands = false, ...extra } = {}) => ({
+const variant = (draw, control, { colourings = false, themes = false, lands = false, ...extra } = {}) => ({
   control,
   lands,
   colourings,
   themes,
-  gradeInside,
   theme: extra.theme,
   fill: (model, course, options) => draw(model, course, "fill", { ...options, ...extra }),
   within: (model, course, options) => draw(model, course, "within", { ...options, ...extra }),
   overall: (model, course, options) => [draw(model, course, "overall", { ...options, ...extra })],
 });
 
-const pieRing = { type: "ring", span: { top: PIE.cy - PIE.r, base: PIE.cy + PIE.r } };
+// A pie's key sits beneath it, nearly as wide as the diagram.
+const pieRing = { type: "ring", span: { top: PIE.cy - PIE.r, base: PIE.cy + PIE.r, across: { left: 30, right: VARIANT_VIEW.w - 30 } } };
 const stackBar = { type: "bar", x: STACK.x, w: STACK.w, y: STACK.base, span: { top: STACK.top, base: STACK.base } };
 
 export const VARIANTS = {
   histogram: variant(histogram, { type: "bar", x: HIST.x, w: HIST.w, y: HIST.base + 22, span: { top: HIST.top, base: HIST.base } }, { colourings: true, themes: true }),
   stacked: variant(stacked, stackBar, { colourings: true, theme: "light", lands: true }),
   filling: variant(stacked, stackBar, { constant: true, themes: true }),
-  rose: variant(rose, pieRing, { colourings: true }),
-  donut: variant(rose, pieRing, { colourings: true, gradeInside: true, hole: 80 }),
+  donut: variant(rose, pieRing, { colourings: true, hole: PIE.r / SCORE_MAX }),
 };

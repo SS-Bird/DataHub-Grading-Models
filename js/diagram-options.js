@@ -144,53 +144,93 @@ function describe(o) {
   };
 }
 
-/** Label centres beside each segment, pushed apart so none overlap, and kept within the key's height. */
-function spread(ideal, height) {
+/**
+ * Label centres along the key, pushed apart so none overlap (each needs `sizes[i]` of room, centred on it) and kept
+ * within its length.
+ */
+function spread(ideal, sizes, length) {
   const at = [...ideal];
-  const half = KEY.line / 2;
-  at.forEach((y, i) => { at[i] = Math.max(y, i ? at[i - 1] + KEY.line : half); });
-  for (let i = at.length - 1; i >= 0; i--) at[i] = Math.min(at[i], i < at.length - 1 ? at[i + 1] - KEY.line : height - half);
+  at.forEach((v, i) => { at[i] = Math.max(v, i ? at[i - 1] + (sizes[i - 1] + sizes[i]) / 2 : sizes[0] / 2); });
+  for (let i = at.length - 1; i >= 0; i--) {
+    at[i] = Math.min(at[i], i < at.length - 1 ? at[i + 1] - (sizes[i] + sizes[i + 1]) / 2 : length - sizes[i] / 2);
+  }
   return at;
 }
 
+const LABEL = { char: 8.6, pad: 14, row: 40 }; // a key label's width per character, the space around it, and a row's height beneath a bar
+
 /**
- * The key, as tall as the diagram beside it (`chartSvg`) and drawn in its pixels: a bar spanning the diagram's height
- * (`span`, in viewBox units), a segment per origin in its colour (as tall as its share), split by thin lines into its
- * applications, each origin named beside it. The first origin is at the bottom, as in the diagram's stacks.
- * `plain` colours each origin by its average score instead of its origin colour, for when the scores keep their
- * rubric colours (origin on hover). Origins are parted by small gaps.
+ * The key, drawn in the pixels of the diagram (`chartSvg`) it sits beside or beneath: a bar spanning the diagram
+ * (`span`, in viewBox units: its height, or, for a key beneath, `across` its width), a segment per origin in its colour
+ * (as long as its share), split by thin lines into its applications, with each origin named beside or beneath it.
+ * Beside, the first origin is at the bottom, as in the diagram's stacks; beneath, it is on the left, and the names
+ * take two rows when they don't fit in one, each with its share beneath it. `plain` colours each origin by its average score instead of its origin
+ * colour, for when the scores keep their rubric colours (origin on hover). Origins are parted by small gaps.
  */
 function drawKey(svg, chartSvg, span, model, course, plain = false) {
-  const height = chartSvg.getBoundingClientRect().height;
-  const width = svg.getBoundingClientRect().width;
-  if (!height || !width) return;
-  const scale = height / VARIANT_VIEW.h;
-  svg.style.height = `${height}px`;
-  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  const chartBox = chartSvg.getBoundingClientRect();
+  const keyBox = svg.getBoundingClientRect();
+  if (!chartBox.height || !keyBox.width) return;
+  const scale = chartBox.height / VARIANT_VIEW.h;
+  const below = Boolean(span.across);
   const origins = contributions(model, course);
   // Origins are parted by gaps; the bar, gaps and all, spans the diagram.
   const gaps = KEY.gap * Math.max(0, origins.filter((o) => o.share > 0).length - 1);
-  const room = Math.max(0, (span.base - span.top) * scale - gaps);
-  let y = span.base * scale + KEY.gap;
+  const [from, to] = below
+    ? [span.across.left * scale + chartBox.left - keyBox.left, span.across.right * scale + chartBox.left - keyBox.left]
+    : [span.base * scale, span.top * scale];
+  const dir = below ? 1 : -1; // beneath, left to right; beside, bottom up
+  const room = Math.max(0, Math.abs(to - from) - gaps);
+  let at = from - dir * KEY.gap;
   const parts = origins.map((o, i) => {
-    const h = room * o.share;
-    if (h > 0) y -= KEY.gap;
-    y -= h;
-    return { o, i, y, h };
-  }).reverse(); // top down, for placing the labels
-  const centres = spread(parts.map((p) => p.y + p.h / 2), height);
-  svg.innerHTML = parts.map(({ o, i, y, h }, n) => {
-    const said = describe(o);
-    let cut = y + h;
-    const lines = o.applications.slice(0, -1).map((a) => {
-      cut -= room * a.share;
-      return `<line class="key__cut" x1="0" x2="${KEY.bar}" y1="${cut}" y2="${cut}"/>`;
+    const len = room * o.share;
+    if (len > 0) at += dir * KEY.gap;
+    const start = dir > 0 ? at : at - len;
+    at += dir * len;
+    return { o, i, start, len, said: describe(o) };
+  });
+  const segment = ({ o, i, start, len }) => {
+    // Cuts between applications, from the first origin's end of the segment.
+    let cut = dir > 0 ? start : start + len;
+    const cuts = o.applications.slice(0, -1).map((a) => {
+      cut += dir * room * a.share;
+      return below
+        ? `<line class="key__cut" x1="${cut}" x2="${cut}" y1="0" y2="${KEY.bar}"/>`
+        : `<line class="key__cut" x1="0" x2="${KEY.bar}" y1="${cut}" y2="${cut}"/>`;
     }).join("");
-    return `<g class="from-${i}" data-origin="${i}" tabindex="0">
-      <rect ${plain ? `class="key__plain" style="fill: ${o.average === null ? "none" : mellowFill(o.average)}"` : `class="origin-${model}--${i}"`} x="0" y="${y}" width="${KEY.bar}" height="${h}"/>${lines}
-      <text class="key__name" x="${KEY.labelX}" y="${centres[n]}" dominant-baseline="middle">${said.name} <tspan class="key__share">${said.share}</tspan></text>
-    </g>`;
-  }).join("");
+    const fill = plain ? `class="key__plain" style="fill: ${o.average === null ? "none" : mellowFill(o.average)}"` : `class="origin-${model}--${i}"`;
+    const rect = below
+      ? `<rect ${fill} x="${start}" y="0" width="${len}" height="${KEY.bar}"/>`
+      : `<rect ${fill} x="0" y="${start}" width="${KEY.bar}" height="${len}"/>`;
+    return rect + cuts;
+  };
+
+  let labels;
+  if (below) {
+    // Names beneath, centred on their segments: one row if they fit, else every other one drops to a second row.
+    const widths = parts.map((p) => Math.max(p.said.name.length, p.said.share.length) * LABEL.char + LABEL.pad);
+    const fits = widths.reduce((a, b) => a + b, 0) <= keyBox.width;
+    const rows = fits ? [parts.map((_, n) => n)] : [parts.map((_, n) => n).filter((n) => n % 2 === 0), parts.map((_, n) => n).filter((n) => n % 2)];
+    const centre = new Map();
+    rows.forEach((row, r) => {
+      const xs = spread(row.map((n) => parts[n].start + parts[n].len / 2), row.map((n) => widths[n]), keyBox.width);
+      row.forEach((n, k) => centre.set(n, { x: xs[k], y: KEY.bar + 22 + r * LABEL.row }));
+    });
+    const height = KEY.bar + 44 + (rows.length - 1) * LABEL.row;
+    svg.style.height = `${height}px`;
+    svg.setAttribute("viewBox", `0 0 ${keyBox.width} ${height}`);
+    // The name, with its share beneath it.
+    labels = (p, n) => `<text class="key__name" x="${centre.get(n).x}" y="${centre.get(n).y}" text-anchor="middle">${p.said.name}<tspan class="key__share" x="${centre.get(n).x}" dy="18">${p.said.share}</tspan></text>`;
+  } else {
+    svg.style.height = `${chartBox.height}px`;
+    svg.setAttribute("viewBox", `0 0 ${keyBox.width} ${chartBox.height}`);
+    // Top down, for placing the names beside their segments.
+    const order = parts.map((_, n) => n).reverse();
+    const ys = spread(order.map((n) => parts[n].start + parts[n].len / 2), order.map(() => KEY.line), chartBox.height);
+    const centre = new Map(order.map((n, k) => [n, ys[k]]));
+    labels = (p, n) => `<text class="key__name" x="${KEY.labelX}" y="${centre.get(n)}" dominant-baseline="middle">${p.said.name} <tspan class="key__share">${p.said.share}</tspan></text>`;
+  }
+  svg.innerHTML = parts.map((p, n) => `<g class="from-${p.i}" data-origin="${p.i}" tabindex="0">${segment(p)}${labels(p, n)}</g>`).join("");
 }
 
 /** Show the hover label (`tip`, in `holder`) by the pointer, with what is said of an origin. */
@@ -220,7 +260,7 @@ function createOption(section) {
   const store = createStore(optionPresets);
   let action = "fill"; // what the diagrams show once their sequence ends; an edit redraws its last frame
   let timers = [];
-  section.classList.toggle("option--grade-inside", variant.gradeInside); // the diagram shows the grade itself
+  section.classList.toggle("option--key-below", Boolean(variant.control.span.across)); // the key sits beneath the diagram
   const settings = { colouring: "rubric", theme: "dark", landing: "gap" };
   const unhover = (side) => {
     delete side.dataset.highlight;
