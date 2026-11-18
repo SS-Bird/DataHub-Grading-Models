@@ -239,6 +239,8 @@ function histogram(model, course, mode, { running = false, full = course, colour
 
 const STACK = { x: 30, w: 580, top: 84, base: 466 };
 const DROP = 60; // a new band drops onto its stack from this far above the bin
+const HEADROOM = 32; // always full, a stack stops this far below the bin's top, leaving room for new scores to land
+const LANDING = 22; // how high newly landed scores may stack in that room, so they stay well inside the bin
 
 /** A category's scores as bands, in the order they arrived: a score and its copies (multiplied scores) make one band, `count` tall. */
 function bandsOf(model, c) {
@@ -256,7 +258,12 @@ function bandsOf(model, c) {
  * Filling up (`constant`): every score is the same height (set by the whole course), so a bin fills as scores arrive.
  * Either way a multiplied score's band is that many times taller, and the newest score sits on top.
  */
-function stacked(model, course, mode, { running = false, full = course, constant = false, colouring = "rubric", theme = "dark", grow = null } = {}) {
+/**
+ * Always full, a stack can leave a little room at the top of its bin (`HEADROOM`, with `landing` "gap"): newly
+ * `arriving` scores (a set of score ids) land there, on top of the stack as it was, before the bin shares itself out
+ * among them all.
+ */
+function stacked(model, course, mode, { running = false, full = course, constant = false, colouring = "rubric", theme = "dark", grow = null, arriving = null, landing = "full" } = {}) {
   const { cats, final } = categoriesOf(model, course);
   const index = originIndex(model, course);
   const f = blank();
@@ -270,13 +277,19 @@ function stacked(model, course, mode, { running = false, full = course, constant
     const n = c.scores.length;
     if (mode !== "overall") openBin(f, `stack-bin-${c.id}`, box, STACK.top, STACK.base, !n);
     // Stacked from the floor up in the order the scores came in. Averaged, the bands fill the bin.
-    const unit = mode === "fill" && constant ? room / most : room / Math.max(1, n);
+    // Always full, the stack reaches the headroom; scores arriving sit in the headroom, on top of the rest.
+    const all = bandsOf(model, c);
+    const isNew = (b) => mode === "fill" && arriving?.has(b.key);
+    const settled = all.filter((b) => !isNew(b));
+    const landed = all.filter(isNew);
+    const stackRoom = mode === "fill" && !constant && landing === "gap" ? room - HEADROOM : room;
+    const unit = mode === "fill" && constant ? room / most : stackRoom / Math.max(1, sum(settled.map((b) => b.count)));
+    const landUnit = Math.min(unit, LANDING / Math.max(1, sum(landed.map((b) => b.count))));
     let y = STACK.base;
     // Coloured by origin, bands gather by origin, always in the same order from the floor up, so colours line up across bins.
-    const bands = bandsOf(model, c);
-    if (colouring === "origin") bands.sort((x, y) => index.get(x.origin) - index.get(y.origin) || x.order - y.order);
-    bands.forEach((b) => {
-      const h = b.count * unit;
+    if (colouring === "origin") settled.sort((x, y) => index.get(x.origin) - index.get(y.origin) || x.order - y.order);
+    [...settled, ...landed].forEach((b) => {
+      const h = b.count * (isNew(b) ? landUnit : unit);
       y -= h;
       const band = { key: `band-${b.key}`, x: box.x, y, w: box.w, h, start: { x: box.x, y: STACK.top - DROP - h, w: box.w, h } };
       if (mode === "fill") f.rects.push({ ...band, cls: `band ${colourOf(model, colouring, theme, b.score, index.get(b.origin))}` });
@@ -442,8 +455,9 @@ function rose(model, course, mode, { colouring = "rubric", grow = null, hole = 0
 /* ---------- The variants ---------- */
 
 /** A variant from a draw function (model, course, mode, options); `extra` options apply in every mode (a fixed `theme`, too). */
-const variant = (draw, control, { colourings = false, themes = false, gradeInside = false, ...extra } = {}) => ({
+const variant = (draw, control, { colourings = false, themes = false, gradeInside = false, lands = false, ...extra } = {}) => ({
   control,
+  lands,
   colourings,
   themes,
   gradeInside,
@@ -458,7 +472,7 @@ const stackBar = { type: "bar", x: STACK.x, w: STACK.w, y: STACK.base, span: { t
 
 export const VARIANTS = {
   histogram: variant(histogram, { type: "bar", x: HIST.x, w: HIST.w, y: HIST.base + 22, span: { top: HIST.top, base: HIST.base } }, { colourings: true, themes: true }),
-  stacked: variant(stacked, stackBar, { colourings: true, theme: "light" }),
+  stacked: variant(stacked, stackBar, { colourings: true, theme: "light", lands: true }),
   filling: variant(stacked, stackBar, { constant: true, themes: true }),
   rose: variant(rose, pieRing, { colourings: true }),
   donut: variant(rose, pieRing, { colourings: true, gradeInside: true, hole: 80 }),

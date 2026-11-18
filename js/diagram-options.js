@@ -42,6 +42,8 @@ const countedOnce = (course, typeId) => ({
 /**
  * The semester from its start, with the grade so far. In the CO model, a multiplied assignment's scores first arrive
  * counted once, at the usual size, then grow to their weight while a badge ("4×") says how many times they count.
+ * In a variant that `lands` scores (the always-full stacks), with landing in a gap switched on, each session's scores
+ * first land on top of the stacks as they were, then the bins share themselves out among them all, then any weight is applied.
  */
 function unfold(variant, model, course, options) {
   const frame = (c, extra = {}, timing = {}) => ({
@@ -51,10 +53,14 @@ function unfold(variant, model, course, options) {
   return semester(course).flatMap((c, i) => {
     const session = course.sessions[i - 1]; // the session this step adds (none for the empty start)
     const type = session && course.assessmentTypes.find((t) => t.id === session.type);
-    if (model !== "co" || !(type?.multiplier > 1)) return [frame(c)];
-    const ids = new Set(c.scores.filter((s) => s.session === session.id).map((s) => s.id));
+    const ids = session ? new Set(c.scores.filter((s) => s.session === session.id).map((s) => s.id)) : new Set();
+    const multiplied = model === "co" && type?.multiplier > 1;
+    const once = multiplied ? countedOnce(c, type.id) : c;
+    const landing = variant.lands && options.landing === "gap" && ids.size ? [frame(once, { arriving: ids }, { hold: 600 })] : [];
+    if (!multiplied) return [...landing, frame(c)];
     return [
-      frame(countedOnce(c, type.id), {}, { hold: 700 }),
+      ...landing,
+      frame(once, {}, { hold: 700 }),
       frame(c, { grow: { ids, times: type.multiplier } }, { duration: 900, hold: 1300 }),
       frame(c), // the badges go
     ];
@@ -215,7 +221,7 @@ function createOption(section) {
   let action = "fill"; // what the diagrams show once their sequence ends; an edit redraws its last frame
   let timers = [];
   section.classList.toggle("option--grade-inside", variant.gradeInside); // the diagram shows the grade itself
-  const settings = { colouring: "rubric", theme: "dark" };
+  const settings = { colouring: "rubric", theme: "dark", landing: "gap" };
   const unhover = (side) => {
     delete side.dataset.highlight;
     const tip = side.querySelector(".option__tip");
@@ -232,7 +238,7 @@ function createOption(section) {
     else bar = barControl(side.querySelector(".option__chart"), store, model, variant.control);
     // A key to the origins, right of the diagram, shown while scores are coloured by origin (or, uncoloured, with origin on hover).
     // Pointing at (or focusing) an origin picks out its scores in the diagram, and a label by the pointer gives the finer detail.
-    // Or, with origin on hover, pointing at a score in the diagram does the same for its origin.
+    // Pointing at a score in the diagram does the same for its origin (whenever scores are marked by origin).
     let key = null;
     const state = { course: store.get() }; // the course the diagram shows now (mid-semester, while one unfolds)
     if (variant.colourings) {
@@ -268,7 +274,7 @@ function createOption(section) {
       new ResizeObserver(() => { if (!key.hidden) drawKey(key, svg, variant.control.span, model, state.course, settings.colouring === "hover"); }).observe(svg);
 
       svg.addEventListener("pointermove", (e) => {
-        if (settings.colouring !== "hover") return;
+        if (settings.colouring === "rubric") return;
         const mark = e.target.closest?.('[class*="from-"]')?.getAttribute("class").match(/\bfrom-(\d+)\b/);
         if (mark) hover(e, mark[1]);
         else unhover(side);
@@ -278,7 +284,8 @@ function createOption(section) {
     return { el: side, svg, model, chart, grade, bar, key, state };
   });
 
-  // Each switch above the diagrams (colouring: rubric, origin or origin on hover; theme: dark or light) sets one option for both.
+  // Each switch above the diagrams (colouring: rubric, origin or origin on hover; theme: dark or light; landing: in a gap
+  // or straight into the full stack) sets one option for both.
   function set(name, value) {
     settings[name] = value;
     section.querySelectorAll(`[data-setting="${name}"] [data-value]`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === value)));

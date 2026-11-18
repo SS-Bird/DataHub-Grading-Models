@@ -2721,13 +2721,13 @@ img.story__photo {
   opacity: 0.15;
 }
 
-/* Origin on hover: the scores from the origin pointed at are edged */
-.option--hover .option__side[data-highlight="0"] .option__chart .from-0,
-.option--hover .option__side[data-highlight="1"] .option__chart .from-1,
-.option--hover .option__side[data-highlight="2"] .option__chart .from-2,
-.option--hover .option__side[data-highlight="3"] .option__chart .from-3,
-.option--hover .option__side[data-highlight="4"] .option__chart .from-4,
-.option--hover .option__side[data-highlight="5"] .option__chart .from-5 {
+/* The scores from the origin pointed at (in the diagram or the key) are edged */
+.option__side[data-highlight="0"] .option__chart .from-0,
+.option__side[data-highlight="1"] .option__chart .from-1,
+.option__side[data-highlight="2"] .option__chart .from-2,
+.option__side[data-highlight="3"] .option__chart .from-3,
+.option__side[data-highlight="4"] .option__chart .from-4,
+.option__side[data-highlight="5"] .option__chart .from-5 {
   stroke: var(--color-ink);
   stroke-width: 2;
 }
