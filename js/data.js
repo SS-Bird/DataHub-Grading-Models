@@ -158,6 +158,16 @@ const explainer = {
 
 export const explainerPresets = [{ id: "explainer", name: "Example", course: explainer }];
 
+// The same course for the Temp: Diagram Options page, its assignments simply numbered (polls and comments keep their names).
+const ASSIGNMENT_NAMES = { essay: "Assignment 1", paper: "Assignment 2", final: "Assignment 3" };
+export const optionPresets = [{
+  id: "options", name: "Example", course: {
+    ...explainer,
+    sessions: explainer.sessions.map((s) => (ASSIGNMENT_NAMES[s.id] ? { ...s, name: ASSIGNMENT_NAMES[s.id] } : s)),
+    assessmentTypes: explainer.assessmentTypes.map((t) => (ASSIGNMENT_NAMES[t.id] ? { ...t, name: ASSIGNMENT_NAMES[t.id], shortName: ASSIGNMENT_NAMES[t.id] } : t)),
+  },
+}];
+
 // Early in the semester: a good essay, but a couple of poor in-class scores (and two middling ones)
 // pull the grade so far down to 2.78.
 export const earlySemester = scores([

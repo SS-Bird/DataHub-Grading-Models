@@ -2,16 +2,18 @@
 // side (variants in js/variants.js), from one example course per option. Each option's buttons play both diagrams at
 // once: the average within each category, the average overall, or a semester unfolding (with the grade so far).
 // Weights are changed with a bar beneath the diagram, or, for the pie, by dragging the handles on the ring.
-// Options that offer it can colour scores by rubric score or by origin (an LO, or an assessment type), with a key
-// that picks out an origin's scores when pointed at; some can also be drawn light (dark on light) instead of dark.
+// Options that offer it can colour scores by rubric score or by origin (an LO, or an assessment type). Coloured by
+// origin, a key beside the diagram shows each origin's share of the grade as a bar, split into its applications, and
+// pointing at an origin there picks out its scores. Some options can instead keep the rubric colours and, when a score
+// is pointed at, light up every score from its origin and say the same of it. Some can also be drawn light (dark on light).
 
 import { createStore } from "./store.js";
 import { createChart } from "./chart.js";
 import { createWeightBar } from "./weights.js";
-import { VARIANTS, VARIANT_VIEW, PIE, categoriesOf, originsOf, pieAngles } from "./variants.js";
+import { VARIANTS, VARIANT_VIEW, PIE, categoriesOf, contributions, pieAngles } from "./variants.js";
 import { assessmentTypeModel, coModel, format } from "./grading.js";
-import { pastelFill } from "./palette.js";
-import { explainerPresets } from "./data.js";
+import { pastelFill, mellowFill } from "./palette.js";
+import { optionPresets } from "./data.js";
 
 const PAUSE = 1600; // between frames of a sequence, unless a frame sets its own `hold`
 const MIN_SHARE = 0.05; // no category can be dragged below this share of the grade
@@ -44,7 +46,7 @@ const countedOnce = (course, typeId) => ({
 function unfold(variant, model, course, options) {
   const frame = (c, extra = {}, timing = {}) => ({
     ...variant.fill(model, c, { ...options, running: true, full: course, ...extra }),
-    ease: "smooth", duration: 450, stagger: 0, hold: 650, grade: MODELS[model](c).final, ...timing,
+    ease: "smooth", duration: 450, stagger: 0, hold: 650, grade: MODELS[model](c).final, course: c, ...timing,
   });
   return semester(course).flatMap((c, i) => {
     const session = course.sessions[i - 1]; // the session this step adds (none for the empty start)
@@ -115,6 +117,87 @@ function ringControl(svg, store, model) {
   });
 }
 
+/* ---------- The origin key ---------- */
+
+const KEY = { bar: 18, labelX: 28, line: 24, gap: 12 };
+const share = (v) => `${(v * 100).toFixed(1)}%`;
+
+/** What is said of an origin: its name and share of the grade, then (on hover) its applications and their worth. */
+function describe(o) {
+  const worths = o.applications.map((a) => a.share);
+  const n = worths.length;
+  const lo = Math.min(...worths);
+  const hi = Math.max(...worths);
+  return {
+    name: o.name,
+    share: `${Math.round(o.share * 100)}%`,
+    fine: !n ? ["No applications yet"] : [
+      `${n} application${n === 1 ? "" : "s"}`,
+      n === 1 ? `worth ${share(hi)}` : `each worth ${share(lo)}${hi - lo > 5e-4 ? `–${share(hi)}` : ""}, ${share(o.share / n)} on average`,
+    ],
+  };
+}
+
+/** Label centres beside each segment, pushed apart so none overlap, and kept within the key's height. */
+function spread(ideal, height) {
+  const at = [...ideal];
+  const half = KEY.line / 2;
+  at.forEach((y, i) => { at[i] = Math.max(y, i ? at[i - 1] + KEY.line : half); });
+  for (let i = at.length - 1; i >= 0; i--) at[i] = Math.min(at[i], i < at.length - 1 ? at[i + 1] - KEY.line : height - half);
+  return at;
+}
+
+/**
+ * The key, as tall as the diagram beside it (`chartSvg`) and drawn in its pixels: a bar spanning the diagram's height
+ * (`span`, in viewBox units), a segment per origin in its colour (as tall as its share), split by thin lines into its
+ * applications, each origin named beside it. The first origin is at the bottom, as in the diagram's stacks.
+ * `plain` colours each origin by its average score instead of its origin colour, for when the scores keep their
+ * rubric colours (origin on hover). Origins are parted by small gaps.
+ */
+function drawKey(svg, chartSvg, span, model, course, plain = false) {
+  const height = chartSvg.getBoundingClientRect().height;
+  const width = svg.getBoundingClientRect().width;
+  if (!height || !width) return;
+  const scale = height / VARIANT_VIEW.h;
+  svg.style.height = `${height}px`;
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  const origins = contributions(model, course);
+  // Origins are parted by gaps; the bar, gaps and all, spans the diagram.
+  const gaps = KEY.gap * Math.max(0, origins.filter((o) => o.share > 0).length - 1);
+  const room = Math.max(0, (span.base - span.top) * scale - gaps);
+  let y = span.base * scale + KEY.gap;
+  const parts = origins.map((o, i) => {
+    const h = room * o.share;
+    if (h > 0) y -= KEY.gap;
+    y -= h;
+    return { o, i, y, h };
+  }).reverse(); // top down, for placing the labels
+  const centres = spread(parts.map((p) => p.y + p.h / 2), height);
+  svg.innerHTML = parts.map(({ o, i, y, h }, n) => {
+    const said = describe(o);
+    let cut = y + h;
+    const lines = o.applications.slice(0, -1).map((a) => {
+      cut -= room * a.share;
+      return `<line class="key__cut" x1="0" x2="${KEY.bar}" y1="${cut}" y2="${cut}"/>`;
+    }).join("");
+    return `<g class="from-${i}" data-origin="${i}" tabindex="0">
+      <rect ${plain ? `class="key__plain" style="fill: ${o.average === null ? "none" : mellowFill(o.average)}"` : `class="origin-${model}--${i}"`} x="0" y="${y}" width="${KEY.bar}" height="${h}"/>${lines}
+      <text class="key__name" x="${KEY.labelX}" y="${centres[n]}" dominant-baseline="middle">${said.name} <tspan class="key__share">${said.share}</tspan></text>
+    </g>`;
+  }).join("");
+}
+
+/** Show the hover label (`tip`, in `holder`) by the pointer, with what is said of an origin. */
+function showTip(tip, holder, e, origin) {
+  const said = describe(origin);
+  const box = holder.getBoundingClientRect();
+  const at = e.clientX !== undefined ? e : e.target.getBoundingClientRect(); // focused from the keyboard: by the label
+  tip.innerHTML = `<strong>${said.name} ${said.share}</strong><br>${said.fine.join("<br>")}`;
+  tip.style.left = `${(at.clientX ?? at.right) - box.left + 14}px`;
+  tip.style.top = `${(at.clientY ?? at.top) - box.top + 14}px`;
+  tip.hidden = false;
+}
+
 /** A weight bar laid over the chart, lined up with the diagram (`control` is in viewBox units). */
 function barControl(holder, store, model, control) {
   const el = document.createElement("div");
@@ -128,9 +211,16 @@ function barControl(holder, store, model, control) {
 
 function createOption(section) {
   const variant = VARIANTS[section.dataset.variant];
-  const store = createStore(explainerPresets);
+  const store = createStore(optionPresets);
   let action = "fill"; // what the diagrams show once their sequence ends; an edit redraws its last frame
   let timers = [];
+  section.classList.toggle("option--grade-inside", variant.gradeInside); // the diagram shows the grade itself
+  const settings = { colouring: "rubric", theme: "dark" };
+  const unhover = (side) => {
+    delete side.dataset.highlight;
+    const tip = side.querySelector(".option__tip");
+    if (tip) tip.hidden = true;
+  };
 
   const sides = [...section.querySelectorAll("[data-model]")].map((side) => {
     const model = side.dataset.model;
@@ -140,36 +230,67 @@ function createOption(section) {
     let bar = null;
     if (variant.control.type === "ring") ringControl(svg, store, model);
     else bar = barControl(side.querySelector(".option__chart"), store, model, variant.control);
-    // A key to the origin colours, beneath the grade, shown while scores are coloured by origin.
-    // Pointing at (or focusing) an origin picks out its scores in the diagram.
-    let legend = null;
+    // A key to the origins, right of the diagram, shown while scores are coloured by origin (or, uncoloured, with origin on hover).
+    // Pointing at (or focusing) an origin picks out its scores in the diagram, and a label by the pointer gives the finer detail.
+    // Or, with origin on hover, pointing at a score in the diagram does the same for its origin.
+    let key = null;
+    const state = { course: store.get() }; // the course the diagram shows now (mid-semester, while one unfolds)
     if (variant.colourings) {
-      legend = document.createElement("ul");
-      legend.className = "option__legend";
-      legend.setAttribute("aria-label", model === "at" ? "Colour of each LO" : "Colour of each assessment type");
-      legend.innerHTML = originsOf(model, store.get()).map((o, i) => `
-        <li tabindex="0" data-origin="${i}"><span class="option__swatch" style="background: var(--origin-${model}-${i})"></span>${o.name}</li>`).join("");
-      const pick = (e) => {
-        const item = e.target.closest("[data-origin]");
-        if (item) side.dataset.highlight = item.dataset.origin;
+      // What is said of the origin pointed at, in a label by the pointer.
+      const tip = document.createElement("p");
+      tip.className = "option__tip";
+      tip.hidden = true;
+      side.append(tip);
+      const hover = (e, i) => {
+        const origin = contributions(model, state.course)[i];
+        if (!origin) return unhover(side);
+        side.dataset.highlight = i;
+        showTip(tip, side, e, origin);
       };
-      const unpick = () => delete side.dataset.highlight;
-      legend.addEventListener("pointerover", pick);
-      legend.addEventListener("focusin", pick);
-      legend.addEventListener("pointerleave", unpick);
-      legend.addEventListener("focusout", unpick);
-      side.querySelector(".option__grade").append(legend);
+
+      key = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      key.classList.add("option__key");
+      key.setAttribute("role", "img");
+      key.setAttribute("aria-label", model === "at" ? "Each LO's share of the grade" : "Each assessment type's share of the grade");
+      key.addEventListener("pointermove", (e) => {
+        const item = e.target.closest("[data-origin]");
+        if (item) hover(e, item.dataset.origin);
+        else unhover(side);
+      });
+      key.addEventListener("pointerleave", () => unhover(side));
+      key.addEventListener("focusin", (e) => {
+        const item = e.target.closest("[data-origin]");
+        if (item) hover(e, item.dataset.origin);
+      });
+      key.addEventListener("focusout", () => unhover(side));
+      side.querySelector(".option__grade").before(key);
+      // Redrawn whenever the diagram changes size, to stay as tall as it.
+      new ResizeObserver(() => { if (!key.hidden) drawKey(key, svg, variant.control.span, model, state.course, settings.colouring === "hover"); }).observe(svg);
+
+      svg.addEventListener("pointermove", (e) => {
+        if (settings.colouring !== "hover") return;
+        const mark = e.target.closest?.('[class*="from-"]')?.getAttribute("class").match(/\bfrom-(\d+)\b/);
+        if (mark) hover(e, mark[1]);
+        else unhover(side);
+      });
+      svg.addEventListener("pointerleave", () => unhover(side));
     }
-    return { model, chart, grade, bar, legend };
+    return { el: side, svg, model, chart, grade, bar, key, state };
   });
 
-  // Each switch above the diagrams (colouring: rubric or origin; theme: dark or light) sets one option for both.
-  const settings = { colouring: "rubric", theme: "dark" };
+  // Each switch above the diagrams (colouring: rubric, origin or origin on hover; theme: dark or light) sets one option for both.
   function set(name, value) {
     settings[name] = value;
     section.querySelectorAll(`[data-setting="${name}"] [data-value]`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === value)));
-    section.classList.toggle("option--light", settings.theme === "light");
-    sides.forEach((side) => side.legend?.toggleAttribute("hidden", settings.colouring !== "origin"));
+    section.classList.toggle("option--light", (variant.theme ?? settings.theme) === "light");
+    section.classList.toggle("option--hover", settings.colouring === "hover");
+    const keyed = settings.colouring === "origin" || settings.colouring === "hover";
+    section.classList.toggle("option--keyed", keyed);
+    sides.forEach((side) => {
+      side.key?.toggleAttribute("hidden", !keyed);
+      unhover(side.el);
+      if (side.key && !side.key.hidden) drawKey(side.key, side.svg, variant.control.span, side.model, side.state.course, settings.colouring === "hover");
+    });
   }
   Object.entries(settings).forEach(([name, value]) => set(name, value));
 
@@ -190,6 +311,8 @@ function createOption(section) {
       const step = (i) => {
         const frame = frames[i];
         side.chart.render(frame);
+        side.state.course = frame.course ?? course;
+        if (side.key && !side.key.hidden) drawKey(side.key, side.svg, variant.control.span, side.model, side.state.course, settings.colouring === "hover");
         showGrade(side, "grade" in frame ? frame.grade : MODELS[side.model](course).final);
         if (i + 1 < frames.length) timers.push(setTimeout(() => step(i + 1), frame.hold ?? PAUSE));
       };

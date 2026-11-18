@@ -53,8 +53,8 @@
 
     <!-- Each option: its buttons (and, for some, a choice of colouring), then both models side by side; drawn by js/diagram-options.js -->
 
-    <section class="option" data-variant="histogram" aria-labelledby="option-histogram">
-      <h2 id="option-histogram">1. Histogram</h2>
+    <section class="option" data-variant="stacked" aria-labelledby="option-stacked">
+      <h2 id="option-stacked">1. Stacked bar, always full</h2>
       <div class="play-buttons option__buttons">
         <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
         <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
@@ -65,76 +65,7 @@
         <div class="switch" role="group" aria-label="Colour the scores by" data-setting="colouring">
           <button type="button" class="switch__option" data-value="rubric">Score rubric colouring</button>
           <button type="button" class="switch__option" data-value="origin">Score origin colouring</button>
-        </div>
-        <div class="switch" role="group" aria-label="Diagram theme" data-setting="theme">
-          <button type="button" class="switch__option" data-value="dark">Dark mode</button>
-          <button type="button" class="switch__option" data-value="light">Light mode</button>
-        </div>
-      </div>
-      <div class="option__pair">
-        <figure class="option__side" data-model="at">
-          <div class="option__chart panel">
-            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
-          </div>
-          <div class="option__grade">
-            <p class="side__title">Course grade to date</p>
-            <p class="option__grade-value"></p>
-          </div>
-        </figure>
-        <figure class="option__side" data-model="co">
-          <div class="option__chart panel">
-            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
-          </div>
-          <div class="option__grade">
-            <p class="side__title">Course grade to date</p>
-            <p class="option__grade-value"></p>
-          </div>
-        </figure>
-      </div>
-    </section>
-
-    <section class="option" data-variant="stacked" aria-labelledby="option-stacked">
-      <h2 id="option-stacked">2. Stacked bar, always full</h2>
-      <div class="play-buttons option__buttons">
-        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
-        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
-        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
-        <button type="button" class="play-button" data-action="fill">Show the scores</button>
-      </div>
-      <div class="option__pair">
-        <figure class="option__side" data-model="at">
-          <div class="option__chart panel">
-            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
-          </div>
-          <div class="option__grade">
-            <p class="side__title">Course grade to date</p>
-            <p class="option__grade-value"></p>
-          </div>
-        </figure>
-        <figure class="option__side" data-model="co">
-          <div class="option__chart panel">
-            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
-          </div>
-          <div class="option__grade">
-            <p class="side__title">Course grade to date</p>
-            <p class="option__grade-value"></p>
-          </div>
-        </figure>
-      </div>
-    </section>
-
-    <section class="option" data-variant="filling" aria-labelledby="option-filling">
-      <h2 id="option-filling">3. Stacked bar, filling up</h2>
-      <div class="play-buttons option__buttons">
-        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
-        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
-        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
-        <button type="button" class="play-button" data-action="fill">Show the scores</button>
-      </div>
-      <div class="switches">
-        <div class="switch" role="group" aria-label="Diagram theme" data-setting="theme">
-          <button type="button" class="switch__option" data-value="dark">Dark mode</button>
-          <button type="button" class="switch__option" data-value="light">Light mode</button>
+          <button type="button" class="switch__option" data-value="hover">Score origin on hover</button>
         </div>
       </div>
       <div class="option__pair">
@@ -160,7 +91,7 @@
     </section>
 
     <section class="option" data-variant="rose" aria-labelledby="option-rose">
-      <h2 id="option-rose">4. Pie chart, radius by score</h2>
+      <h2 id="option-rose">2. Pie chart, radius by score</h2>
       <div class="play-buttons option__buttons">
         <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
         <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
@@ -171,6 +102,120 @@
         <div class="switch" role="group" aria-label="Colour the scores by" data-setting="colouring">
           <button type="button" class="switch__option" data-value="rubric">Score rubric colouring</button>
           <button type="button" class="switch__option" data-value="origin">Score origin colouring</button>
+          <button type="button" class="switch__option" data-value="hover">Score origin on hover</button>
+        </div>
+      </div>
+      <div class="option__pair">
+        <figure class="option__side" data-model="at">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+        <figure class="option__side" data-model="co">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="option" data-variant="donut" aria-labelledby="option-donut">
+      <h2 id="option-donut">3. Ring, height by score</h2>
+      <div class="play-buttons option__buttons">
+        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
+        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
+        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        <button type="button" class="play-button" data-action="fill">Show the scores</button>
+      </div>
+      <div class="switches">
+        <div class="switch" role="group" aria-label="Colour the scores by" data-setting="colouring">
+          <button type="button" class="switch__option" data-value="rubric">Score rubric colouring</button>
+          <button type="button" class="switch__option" data-value="origin">Score origin colouring</button>
+          <button type="button" class="switch__option" data-value="hover">Score origin on hover</button>
+        </div>
+      </div>
+      <div class="option__pair">
+        <figure class="option__side" data-model="at">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+        <figure class="option__side" data-model="co">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="option" data-variant="histogram" aria-labelledby="option-histogram">
+      <h2 id="option-histogram">4. Histogram</h2>
+      <div class="play-buttons option__buttons">
+        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
+        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
+        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        <button type="button" class="play-button" data-action="fill">Show the scores</button>
+      </div>
+      <div class="switches">
+        <div class="switch" role="group" aria-label="Colour the scores by" data-setting="colouring">
+          <button type="button" class="switch__option" data-value="rubric">Score rubric colouring</button>
+          <button type="button" class="switch__option" data-value="origin">Score origin colouring</button>
+        </div>
+        <div class="switch" role="group" aria-label="Diagram theme" data-setting="theme">
+          <button type="button" class="switch__option" data-value="dark">Dark mode</button>
+          <button type="button" class="switch__option" data-value="light">Light mode</button>
+        </div>
+      </div>
+      <div class="option__pair">
+        <figure class="option__side" data-model="at">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="Assessment Type Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+        <figure class="option__side" data-model="co">
+          <div class="option__chart panel">
+            <svg role="img" aria-label="CO Model, drawn as this option"></svg>
+          </div>
+          <div class="option__grade">
+            <p class="side__title">Course grade to date</p>
+            <p class="option__grade-value"></p>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="option" data-variant="filling" aria-labelledby="option-filling">
+      <h2 id="option-filling">5. Stacked bar, filling up</h2>
+      <div class="play-buttons option__buttons">
+        <button type="button" class="play-button" data-action="within"><span aria-hidden="true">▶</span> Show average within each assessment type / CO</button>
+        <button type="button" class="play-button" data-action="overall"><span aria-hidden="true">▶</span> Show average overall</button>
+        <button type="button" class="play-button" data-action="unfold"><span aria-hidden="true">▶</span> Watch a semester unfold</button>
+        <button type="button" class="play-button" data-action="fill">Show the scores</button>
+      </div>
+      <div class="switches">
+        <div class="switch" role="group" aria-label="Diagram theme" data-setting="theme">
+          <button type="button" class="switch__option" data-value="dark">Dark mode</button>
+          <button type="button" class="switch__option" data-value="light">Light mode</button>
         </div>
       </div>
       <div class="option__pair">

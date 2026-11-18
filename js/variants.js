@@ -5,20 +5,25 @@
 //   histogram  a bin per category, with a bar per score level (0–5) as tall as its frequency (how many scores at that level)
 //   stacked    a bin per category, as wide as its weight, always full: a stack of bands, one per score
 //   filling    the same bins, filled by bands of one constant height, so a bin fills up as scores arrive
-//              (in both, a multiplied score is one band, that many times taller, and new scores land on top)
+//              (in both, a multiplied score is one band, that many times taller, and new scores land on top;
+//              coloured by origin, the bands gather by origin instead)
 //   rose       a slice per category as wide as its weight, each score an equal piece whose radius is set by its score
 //              (a 5 reaches the rim, a 1 a fifth of the way)
+//   donut      the same as a ring: each piece stands out from an inner circle, as high as its score; the course
+//              grade to date sits in the middle (`gradeInside`)
 // Averaged within, each category fills its bin (or slice); averaged overall, the grade fills the whole diagram.
 //
 // Options (passed in each mode's `options`):
 //   colouring: "rubric" colours scores by rubric score; "origin" by where they came from, in the Assessment Type Model
-//              a score's LO, in the CO Model its assessment type (see `originsOf`); variants with `colourings` offer it.
+//              a score's LO, in the CO Model its assessment type (see `originsOf`); "hover" keeps the rubric colours
+//              but marks each score's origin, so the page can light up an origin's scores when one is pointed at.
+//              Variants with `colourings` offer it (the stacked and pie variants offer "hover" too).
 //   theme:     "dark" draws dark bins and pastel scores; "light" outline bins and mellow scores (`themes`).
-//              The pie always takes the mellow colours.
+//              The always-full stacked bars are always light (`theme`), and the pie always takes the mellow colours.
 //   grow:      { ids, times }: a badge ("4×") on the scores with these ids, as they grow to their weight.
-// Score elements coloured by origin get the class `from-N` (N in originsOf order), so the page can pick them out.
-// Every variant also names where its weight control sits (`control`, in viewBox units):
-// a bar beneath the bins, or a ring around the pie.
+// Score elements coloured or marked by origin get the class `from-N` (N in originsOf order), so the page can pick them out.
+// Every variant also names where its weight control sits (`control`, in viewBox units): a bar beneath the bins, or a
+// ring around the pie; and the height its diagram spans (`control.span`: top and base), for a key beside it.
 
 import { assessmentTypeModel, coModel, format, percent, SCORE_MAX } from "./grading.js";
 import { pastelFill, mellowFill } from "./palette.js";
@@ -71,6 +76,36 @@ export function originsOf(model, course) {
 
 const originId = (model, s) => (model === "at" ? s.lo : s.source);
 
+/**
+ * How much of the grade each origin carries, in originsOf order: its `share` of the grade, its `applications`
+ * (each a score, with its copies, and that score's share), in the order they arrived, and their `average` score. Within a category every score
+ * (or copy) counts equally, so a score's share is its category's share of the scored weight, split among its scores.
+ */
+export function contributions(model, course) {
+  const { cats } = categoriesOf(model, course);
+  const scored = sum(cats.filter((c) => c.scores.length).map((c) => c.weight)) || 1;
+  const index = originIndex(model, course);
+  const origins = originsOf(model, course).map((o) => ({ ...o, share: 0, applications: [] }));
+  const byKey = new Map();
+  cats.forEach((c) => c.scores.forEach((s) => {
+    const each = c.weight / scored / c.scores.length;
+    const key = s.copyOf ?? s.key;
+    const origin = origins[index.get(originId(model, s))];
+    origin.share += each;
+    if (byKey.has(key)) byKey.get(key).share += each;
+    else {
+      const application = { key, share: each, order: s.order, score: s.score };
+      byKey.set(key, application);
+      origin.applications.push(application);
+    }
+  }));
+  origins.forEach((o) => {
+    o.applications.sort((a, b) => a.order - b.order);
+    o.average = o.applications.length ? sum(o.applications.map((a) => a.score)) / o.applications.length : null;
+  });
+  return origins;
+}
+
 /** Each origin's place in originsOf, by id. */
 const originIndex = (model, course) => new Map(originsOf(model, course).map((o, i) => [o.id, i]));
 
@@ -79,6 +114,12 @@ const originIndex = (model, course) => new Map(originsOf(model, course).map((o, 
  * since its origins are different things (`origin-at--0`, … for LOs; `origin-co--0`, … for assessment types).
  */
 const originClass = (model, i) => `origin-${model}--${i} from-${i}`;
+
+/** A score's colour classes: by origin, or by rubric score (marked with its origin, for "hover"). */
+function colourOf(model, colouring, theme, score, i) {
+  if (colouring === "origin") return originClass(model, i);
+  return colouring === "hover" ? `${scoreClass(score, theme)} from-${i}` : scoreClass(score, theme);
+}
 
 /** Each category's share of the whole, and of the categories that have scores. */
 function shares(cats) {
@@ -200,12 +241,12 @@ const STACK = { x: 30, w: 580, top: 84, base: 466 };
 const DROP = 60; // a new band drops onto its stack from this far above the bin
 
 /** A category's scores as bands, in the order they arrived: a score and its copies (multiplied scores) make one band, `count` tall. */
-function bandsOf(c) {
+function bandsOf(model, c) {
   const bands = new Map();
   c.scores.forEach((s) => {
     const key = s.copyOf ?? s.key;
     if (bands.has(key)) bands.get(key).count++;
-    else bands.set(key, { key, score: s.score, order: s.order, count: 1 });
+    else bands.set(key, { key, score: s.score, order: s.order, origin: originId(model, s), count: 1 });
   });
   return [...bands.values()].sort((a, b) => a.order - b.order);
 }
@@ -215,14 +256,15 @@ function bandsOf(c) {
  * Filling up (`constant`): every score is the same height (set by the whole course), so a bin fills as scores arrive.
  * Either way a multiplied score's band is that many times taller, and the newest score sits on top.
  */
-function stacked(model, course, mode, { running = false, full = course, constant = false, theme = "dark", grow = null } = {}) {
+function stacked(model, course, mode, { running = false, full = course, constant = false, colouring = "rubric", theme = "dark", grow = null } = {}) {
   const { cats, final } = categoriesOf(model, course);
+  const index = originIndex(model, course);
   const f = blank();
   f.texts.push(title(model));
   const { total } = shares(cats);
   const room = STACK.base - STACK.top;
   const most = Math.max(1, ...categoriesOf(model, full).cats.map((c) => c.scores.length));
-  const placed = acrossByWeight(cats, STACK, mode === "overall" ? 0 : 14);
+  const placed = acrossByWeight(cats, STACK, mode === "overall" ? 0 : 26);
   if (mode === "overall") wholeArea(f, STACK);
   placed.forEach(({ c, box }) => {
     const n = c.scores.length;
@@ -230,11 +272,14 @@ function stacked(model, course, mode, { running = false, full = course, constant
     // Stacked from the floor up in the order the scores came in. Averaged, the bands fill the bin.
     const unit = mode === "fill" && constant ? room / most : room / Math.max(1, n);
     let y = STACK.base;
-    bandsOf(c).forEach((b) => {
+    // Coloured by origin, bands gather by origin, always in the same order from the floor up, so colours line up across bins.
+    const bands = bandsOf(model, c);
+    if (colouring === "origin") bands.sort((x, y) => index.get(x.origin) - index.get(y.origin) || x.order - y.order);
+    bands.forEach((b) => {
       const h = b.count * unit;
       y -= h;
       const band = { key: `band-${b.key}`, x: box.x, y, w: box.w, h, start: { x: box.x, y: STACK.top - DROP - h, w: box.w, h } };
-      if (mode === "fill") f.rects.push({ ...band, cls: `band ${scoreClass(b.score, theme)}` });
+      if (mode === "fill") f.rects.push({ ...band, cls: `band ${colourOf(model, colouring, theme, b.score, index.get(b.origin))}` });
       else f.rects.push({ ...band, cls: "band band--melted", fill: scoreFill(mode === "overall" ? final : c.average, theme) });
       if (grow?.ids.has(b.key)) f.texts.push(growBadge(b.key, box.x + box.w / 2, y + h / 2, grow.times));
     });
@@ -246,12 +291,12 @@ function stacked(model, course, mode, { running = false, full = course, constant
   return f;
 }
 
-/* ---------- 4. Pie, radius by score ---------- */
+/* ---------- 4 & 5. Pie, radius by score, and ring, height by score ---------- */
 
 // Large, with a thin weight ring: everything but the scores is kept quiet, so the scores are read first.
 // Categories are parted by gaps `gap` wide all the way from the centre to the rim, so the pie reads as broken into
 // its categories; once everything melts into the grade, the gaps close and the pie is whole.
-export const PIE = { cx: 320, cy: 290, r: 186, gap: 10, ring: [198, 210], names: 224 };
+export const PIE = { cx: 320, cy: 286, r: 170, gap: 10, ring: [182, 192], names: 204 };
 const CENTRE = { x: PIE.cx, y: PIE.cy };
 const ARC_POINTS = 24; // every shape has the same number of points, so any two can be animated between
 const FULL_TURN = 2 * Math.PI;
@@ -281,11 +326,17 @@ function within(slice, r, b0, b1) {
 
 const arcPoints = (r, [lo, hi]) => Array.from({ length: ARC_POINTS + 1 }, (_, i) => polar(r, lo + ((hi - lo) * i) / ARC_POINTS));
 
-/** The piece of a parted slice between angles b0 and b1, out to radius r, as a polygon from the slice's point. */
-function piece(slice, r, b0, b1) {
-  const rr = Math.max(r, slice.apexD + 1);
+/**
+ * The piece of a parted slice between angles b0 and b1, out to radius r, as a polygon: from the slice's point or,
+ * in a ring, from the inner circle (radius `inner`). Either way it has the same number of points.
+ */
+function piece(slice, r, b0, b1, inner = 0) {
+  const rr = Math.max(r, slice.apexD + 1, inner + 1);
   const outer = arcPoints(rr, within(slice, rr, b0, b1));
-  return `M${points([...outer, ...Array.from({ length: ARC_POINTS + 1 }, () => slice.apex)])}Z`;
+  const base = inner > slice.apexD
+    ? arcPoints(inner, within(slice, inner, b0, b1)).reverse()
+    : Array.from({ length: ARC_POINTS + 1 }, () => slice.apex);
+  return `M${points([...outer, ...base])}Z`;
 }
 
 /** An arc across a parted slice at radius r. */
@@ -302,17 +353,25 @@ export function pieAngles(cats) {
   });
 }
 
-/** The weight ring around the pie: a segment per category, named outside it, and a handle on each inner edge. */
-function ring(f, slices) {
+/**
+ * The weight ring around the pie: a segment per category and a handle on each inner edge, each category named
+ * outside it with its weight and, beneath, its average (`averages`: none once everything has melted into the grade).
+ */
+function ring(f, slices, averages = true) {
   const { total } = shares(slices.map((s) => s.c));
   slices.forEach(({ c, a0, a1 }, i) => {
     f.paths.push({ key: `ring-${c.id}`, cls: `ring ring--${i % 2}`, d: `M${points([...arcPoints(PIE.ring[1], [a0, a1]), ...arcPoints(PIE.ring[0], [a0, a1]).reverse()])}Z` });
-    const [x, y] = polar(PIE.names, (a0 + a1) / 2);
-    const side = Math.sin((a0 + a1) / 2);
-    f.texts.push({
-      key: `ring-lbl-${c.id}`, x, y, text: `${c.name} · ${percent(c.weight / total)}`, size: 11,
-      anchor: side > 0.25 ? "start" : side < -0.25 ? "end" : "middle", cls: "label label--small",
-    });
+    const mid = (a0 + a1) / 2;
+    const [x, y] = polar(PIE.names, mid);
+    const side = Math.sin(mid);
+    const anchor = side > 0.25 ? "start" : side < -0.25 ? "end" : "middle";
+    // Two lines, kept clear of the ring: above it at the top, beside it at the sides, below it at the bottom.
+    const up = Math.cos(mid);
+    const top = up > 0.5 ? y - 18 : up < -0.5 ? y + 8 : y - 3;
+    f.texts.push({ key: `ring-lbl-${c.id}`, x, y: top, text: `${c.name} · ${percent(c.weight / total)}`, size: 15, anchor, cls: "label" });
+    if (averages && c.average !== null) {
+      f.texts.push({ key: `ring-avg-${c.id}`, x, y: top + 17, text: `avg ${format(c.average)}`, size: 14, anchor, cls: "label label--strong" });
+    }
     if (i < slices.length - 1) {
       const [hx, hy] = polar((PIE.ring[0] + PIE.ring[1]) / 2, a1);
       f.outlines.push({ key: `ring-handle-${i}`, cls: "ring-handle", d: circle(hx, hy, 6) });
@@ -320,13 +379,13 @@ function ring(f, slices) {
   });
 }
 
-function rose(model, course, mode, { running = false, colouring = "rubric", grow = null } = {}) {
+/** The pie (`hole` 0), or a ring with an inner circle of radius `hole`, its pieces standing out from it. */
+function rose(model, course, mode, { colouring = "rubric", grow = null, hole = 0 } = {}) {
   const { cats, final } = categoriesOf(model, course);
   const f = blank();
   f.texts.push(title(model));
   const slices = pieAngles(cats);
-  const { total } = shares(cats);
-  const radius = (score) => (PIE.r * Math.max(score, 0.04)) / SCORE_MAX;
+  const radius = (score) => hole + ((PIE.r - hole) * Math.max(score, 0.04)) / SCORE_MAX;
   const byOrigin = colouring === "origin" && mode === "fill";
   const index = originIndex(model, course);
   const half = mode === "overall" ? 0 : PIE.gap / 2;
@@ -336,13 +395,13 @@ function rose(model, course, mode, { running = false, colouring = "rubric", grow
     const slice = parted(a0, a1, half);
     // Faint arcs across the slice at each grade, 1 to 5; its rim is a 5.
     for (let k = 1; k <= SCORE_MAX; k++) {
-      f.outlines.push({ key: `rose-mark-${c.id}-${k}`, cls: k === SCORE_MAX ? "rose-rim" : "grade-mark", d: sliceArc(slice, (PIE.r * k) / SCORE_MAX) });
+      f.outlines.push({ key: `rose-mark-${c.id}-${k}`, cls: k === SCORE_MAX ? "rose-rim" : "grade-mark", d: sliceArc(slice, radius(k)) });
     }
     if (!n) {
-      f.paths.push({ key: `pie-empty-${c.id}`, cls: "slice", d: piece(slice, PIE.r, a0, a1), hatch: true });
+      f.paths.push({ key: `pie-empty-${c.id}`, cls: "slice", d: piece(slice, PIE.r, a0, a1, hole), hatch: true });
       return;
     }
-    f.paths.push({ key: `rose-bg-${c.id}`, cls: "slice-bg", d: piece(slice, PIE.r, a0, a1) });
+    f.paths.push({ key: `rose-bg-${c.id}`, cls: "slice-bg", d: piece(slice, PIE.r, a0, a1, hole) });
     // Coloured by origin, a slice's pieces gather by origin, so each origin reads as one stretch of the slice.
     const scores = byOrigin ? [...c.scores].sort((a, b) => index.get(originId(model, a)) - index.get(originId(model, b)) || byArrival(a, b)) : c.scores;
     // A multiplied score and its copies (side by side in either order) make one piece, that many times as wide, with no lines inside it.
@@ -359,43 +418,48 @@ function rose(model, course, mode, { running = false, colouring = "rubric", grow
       const b1 = a0 + ((a1 - a0) * at) / n;
       const value = mode === "fill" ? s.score : mode === "within" ? c.average : final;
       // The pie always takes the mellow rubric colours.
-      const cls = mode !== "fill" ? "slice slice--melted" : `slice ${byOrigin ? originClass(model, index.get(originId(model, s))) : scoreClass(s.score, "light")}`;
-      f.paths.push({ key: `slice-${s.key}`, cls, d: piece(slice, radius(value), b0, b1), ...(mode === "fill" ? {} : { fill: scoreFill(value, "light") }) });
+      const cls = mode !== "fill" ? "slice slice--melted" : `slice ${colourOf(model, colouring, "light", s.score, index.get(originId(model, s)))}`;
+      f.paths.push({ key: `slice-${s.key}`, cls, d: piece(slice, radius(value), b0, b1, hole), ...(mode === "fill" ? {} : { fill: scoreFill(value, "light") }) });
       if (grow?.ids.has(s.copyOf ?? s.key)) {
-        const [x, y] = polar(Math.max(radius(value) * 0.7, slice.apexD + 20), (b0 + b1) / 2);
+        const [x, y] = polar(hole ? (hole + radius(value)) / 2 : Math.max(radius(value) * 0.7, slice.apexD + 20), (b0 + b1) / 2);
         f.texts.push(growBadge(s.copyOf ?? s.key, x, y, grow.times));
       }
     });
-    const shown = mode === "within" || (running && mode === "fill");
-    if (shown && c.average !== null) {
-      const [x, y] = polar(Math.max(radius(c.average) * 0.6, slice.apexD + 24), (a0 + a1) / 2);
-      f.texts.push({ key: `pie-avg-${c.id}`, x, y, text: format(c.average), size: mode === "within" ? averageSize(c.weight / total) * 0.8 : 15, anchor: "middle", cls: mode === "within" ? onFill("light") : "label label--strong" });
-    }
   });
   if (mode === "overall" && final !== null) {
-    f.texts.push(label("pie-final", PIE.cx, PIE.cy - radius(final) - 22, format(final), 32, { cls: "average", after: true }));
+    if (!hole) f.texts.push(label("pie-final", PIE.cx, PIE.cy - radius(final) - 22, format(final), 32, { cls: "average", after: true }));
   }
-  ring(f, slices);
+  // A ring holds the course grade to date in its middle.
+  if (hole) {
+    f.texts.push(label("ring-grade-title", PIE.cx, PIE.cy - 22, "Course grade", 12, { cls: "label" }));
+    f.texts.push(label("ring-grade-title-2", PIE.cx, PIE.cy - 8, "to date", 12, { cls: "label" }));
+    f.texts.push(label("ring-grade", PIE.cx, PIE.cy + 26, format(final), 30, { cls: "label label--strong" }));
+  }
+  ring(f, slices, mode !== "overall");
   return f;
 }
 
 /* ---------- The variants ---------- */
 
-/** A variant from a draw function (model, course, mode, options); `extra` options apply in every mode. */
-const variant = (draw, control, { colourings = false, themes = false, ...extra } = {}) => ({
+/** A variant from a draw function (model, course, mode, options); `extra` options apply in every mode (a fixed `theme`, too). */
+const variant = (draw, control, { colourings = false, themes = false, gradeInside = false, ...extra } = {}) => ({
   control,
   colourings,
   themes,
+  gradeInside,
+  theme: extra.theme,
   fill: (model, course, options) => draw(model, course, "fill", { ...options, ...extra }),
   within: (model, course, options) => draw(model, course, "within", { ...options, ...extra }),
   overall: (model, course, options) => [draw(model, course, "overall", { ...options, ...extra })],
 });
 
-const stackBar = { type: "bar", x: STACK.x, w: STACK.w, y: STACK.base };
+const pieRing = { type: "ring", span: { top: PIE.cy - PIE.r, base: PIE.cy + PIE.r } };
+const stackBar = { type: "bar", x: STACK.x, w: STACK.w, y: STACK.base, span: { top: STACK.top, base: STACK.base } };
 
 export const VARIANTS = {
-  histogram: variant(histogram, { type: "bar", x: HIST.x, w: HIST.w, y: HIST.base + 22 }, { colourings: true, themes: true }),
-  stacked: variant(stacked, stackBar),
+  histogram: variant(histogram, { type: "bar", x: HIST.x, w: HIST.w, y: HIST.base + 22, span: { top: HIST.top, base: HIST.base } }, { colourings: true, themes: true }),
+  stacked: variant(stacked, stackBar, { colourings: true, theme: "light" }),
   filling: variant(stacked, stackBar, { constant: true, themes: true }),
-  rose: variant(rose, { type: "ring" }, { colourings: true }),
+  rose: variant(rose, pieRing, { colourings: true }),
+  donut: variant(rose, pieRing, { colourings: true, gradeInside: true, hole: 80 }),
 };
